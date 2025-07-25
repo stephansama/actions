@@ -1,0 +1,6 @@
+{
+  "name": "do-not-track-polyfill",
+  "scripts": {
+    "build": "tsup"
+  }
+}

@@ -1,0 +1,7 @@
+{
+	"singleQuote": false,
+	"quoteProps": "consistent",
+	"useTabs": true,
+	"semi": true,
+	"plugins": []
+}

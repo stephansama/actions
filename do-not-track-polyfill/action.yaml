@@ -1,0 +1,8 @@
+name: do-not-track-polyfill
+description: Do not track polyfill
+inputs:
+  additional:
+    description: Additional telemetry providers to block
+runs:
+  using: node20
+  main: "./dist/index.js"
