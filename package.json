@@ -3,6 +3,7 @@
 	"license": "MIT",
 	"scripts": {},
 	"type": "module",
+	"packageManager": "pnpm@10.13.1",
 	"devDependencies": {
 		"@actions/core": "^1.11.1",
 		"@actions/github": "^6.0.1",
