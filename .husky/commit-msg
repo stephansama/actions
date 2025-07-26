@@ -1,1 +1,3 @@
+#!/bin/sh
+
 npx --no -- commitlint --config .husky/.commitlintrc.ts --edit $1
