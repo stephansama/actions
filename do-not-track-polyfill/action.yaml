@@ -1,7 +1,8 @@
 name: do-not-track-polyfill
-description: Do not track polyfill
+description: Polyfills telemetry environment variables when do not track environment variable is set
 inputs:
   additional:
+    required: false
     description: Additional telemetry providers to block
 runs:
   using: node20
