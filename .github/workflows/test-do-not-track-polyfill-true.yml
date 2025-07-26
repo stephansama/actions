@@ -1,0 +1,30 @@
+name: Do not track
+on:
+    push:
+        branches: [main]
+        paths:
+            - do-not-track-polyfill/*
+    pull_request:
+        branches: [main]
+        paths:
+            - do-not-track-polyfill/*
+    workflow_dispatch:
+env:
+    DO_NOT_TRACK: 1
+permissions:
+    actions: write
+    contents: write
+    id-token: write
+    pull-requests: write
+    statuses: write
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: stephansama/actions/do-not-track-polyfill@v1
+            - uses: actions/checkout@v4
+              with:
+                  sparse-checkout: |
+                      scripts
+            - uses: actions/setup-node@v4
+            - run: node ./scripts/verify-do-not-track.js

@@ -1,0 +1,2 @@
+lint-staged --config .husky/.lintstagedrc.mjs
+pnpm turbo lint test --affected

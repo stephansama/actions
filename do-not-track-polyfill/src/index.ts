@@ -7,7 +7,6 @@ const telemetryEnvs = {
 	TURBO_TELEMETRY_DISABLED: 1,
 	VERCEL_TELEMETRY_DISABLED: 1,
 	WRANGLER_SEND_METRICS: false,
-	ZX_VERBOSE: 1,
 };
 
 if (process.env.DO_NOT_TRACK) {

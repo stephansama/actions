@@ -1,22 +1,33 @@
 {
 	"name": "actions-root",
 	"license": "MIT",
-	"scripts": {},
+	"scripts": {
+		"build": "turbo build",
+		"prepare": "husky"
+	},
 	"type": "module",
 	"packageManager": "pnpm@10.13.1",
 	"devDependencies": {
 		"@actions/core": "^1.11.1",
 		"@actions/github": "^6.0.1",
+		"@changesets/cli": "^2.29.5",
+		"@commitlint/cli": "^19.8.1",
+		"@commitlint/config-conventional": "^19.8.1",
+		"@commitlint/types": "^19.8.1",
 		"@eslint/js": "^9.32.0",
 		"@eslint/json": "^0.13.1",
 		"@eslint/markdown": "^7.1.0",
 		"@tsconfig/recommended": "^1.0.10",
+		"@turbo/gen": "^2.5.5",
 		"@types/node": "^24.1.0",
 		"eslint": "^9.32.0",
 		"globals": "^16.3.0",
+		"husky": "^9.1.7",
 		"jiti": "^2.5.1",
+		"lint-staged": "^16.1.2",
 		"prettier": "^3.6.2",
 		"tsup": "^8.5.0",
+		"turbo": "^2.5.5",
 		"typescript": "^5.8.3",
 		"typescript-eslint": "^8.38.0"
 	}
