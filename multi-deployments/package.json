@@ -1,0 +1,6 @@
+{
+	"name": "multi-deployments",
+	"scripts": {
+		"build": "tsup"
+	}
+}

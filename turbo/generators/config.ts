@@ -34,6 +34,11 @@ export default function generator(plop: PlopTypes.NodePlopAPI) {
 				type: "add",
 			},
 			{
+				path: "{{ turbo.paths.root }}/{{ dashCase name }}/action.yml",
+				templateFile: "template/action.yml.hbs",
+				type: "add",
+			},
+			{
 				path: "{{ turbo.paths.root }}/{{ dashCase name }}/README.md",
 				templateFile: "template/README.md.hbs",
 				type: "add",

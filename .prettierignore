@@ -1,4 +1,6 @@
+*.hbs
 .gitignore
 .husky/*
 .prettierignore
+BLANK
 LICENSE
