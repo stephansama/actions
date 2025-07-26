@@ -1,12 +1,16 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 
-const [envs, urls] = Object.entries(
+const environments = Object.entries(
 	JSON.parse(core.getInput("environments") || "{}"),
-) as [string, string][];
+);
+
 const auto_inactive = JSON.parse(
 	core.getInput("invalidate_previous") || "false",
 );
+
+const envs = environments.map(([env]) => env);
+const urls = environments.map(([, url]) => url as string);
 
 const token = process.env.GITHUB_TOKEN;
 
