@@ -1,4 +1,4 @@
-name: Do not track (False)
+name: Test do not track (False)
 on:
   push:
     branches: [main]
@@ -12,12 +12,6 @@ on:
 env:
   DO_NOT_TRACK: 0
   HUSKY: 0
-permissions:
-  actions: write
-  contents: write
-  id-token: write
-  pull-requests: write
-  statuses: write
 jobs:
   release:
     runs-on: ubuntu-latest
