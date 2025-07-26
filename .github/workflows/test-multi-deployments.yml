@@ -12,9 +12,11 @@ on:
 env:
   HUSKY: 0
 permissions:
-  actions: write
+  actions: read
   contents: write
+  deployments: write
   id-token: write
+  issues: write
   pull-requests: write
   statuses: write
 jobs:
