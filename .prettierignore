@@ -2,5 +2,6 @@
 .gitignore
 .husky/*
 .prettierignore
+.editorconfig
 BLANK
 LICENSE

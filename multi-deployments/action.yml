@@ -1,12 +1,12 @@
 name: multi-deployments
 description: Create multiple deployments during one workflow
 inputs:
-    envs:
-        required: true
-        description: Environments to deploy
-    urls:
-        required: true
-        description: URLs to deploy matching envs
+  environments:
+    required: true
+    description: Environments to deploy
+  invalidate_previous:
+    required: true
+    description: Invalidate previous deploys
 runs:
-    using: node20
-    main: "./dist/index.js"
+  using: node20
+  main: "./dist/index.js"
