@@ -1,4 +1,4 @@
-name: Do not track
+name: Do not track (True)
 on:
     push:
         branches: [main]

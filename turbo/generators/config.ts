@@ -1,11 +1,11 @@
 import type { PlopTypes } from "@turbo/gen";
 
 export default function generator(plop: PlopTypes.NodePlopAPI) {
-	plop.setGenerator("package", {
-		description: "Generate a new package",
+	plop.setGenerator("action", {
+		description: "Generate a new action",
 		prompts: [
 			{
-				message: "What is the name of the new package?",
+				message: "What is the name of the new action?",
 				name: "name",
 				type: "input",
 				validate(input: string) {
@@ -29,38 +29,23 @@ export default function generator(plop: PlopTypes.NodePlopAPI) {
 		],
 		actions: [
 			{
-				path: "{{ turbo.paths.root }}/packages/{{ dashCase name }}/package.json",
-				templateFile: "templates/lib/package.json.hbs",
+				path: "{{ turbo.paths.root }}/{{ dashCase name }}/package.json",
+				templateFile: "template/package.json.hbs",
 				type: "add",
 			},
 			{
-				path: "{{ turbo.paths.root }}/packages/{{ dashCase name }}/README.md",
-				templateFile: "templates/lib/README.md.hbs",
+				path: "{{ turbo.paths.root }}/{{ dashCase name }}/README.md",
+				templateFile: "template/README.md.hbs",
 				type: "add",
 			},
 			{
-				path: "{{ turbo.paths.root }}/packages/{{ dashCase name }}/tsup.config.ts",
-				templateFile: "templates/lib/tsup.config.ts",
+				path: "{{ turbo.paths.root }}/{{ dashCase name }}/tsup.config.ts",
+				templateFile: "template/tsup.config.ts",
 				type: "add",
 			},
 			{
-				path: "{{ turbo.paths.root }}/packages/{{ dashCase name }}/tsconfig.json",
-				templateFile: "templates/lib/tsconfig.json",
-				type: "add",
-			},
-			{
-				path: "{{ turbo.paths.root }}/packages/{{ dashCase name }}/vitest.config.ts",
-				templateFile: "templates/lib/vitest.config.ts",
-				type: "add",
-			},
-			{
-				path: "{{ turbo.paths.root }}/packages/{{ dashCase name }}/typedoc.json",
-				templateFile: "templates/lib/typedoc.json",
-				type: "add",
-			},
-			{
-				path: "{{ turbo.paths.root }}/packages/{{ dashCase name }}/src/index.ts",
-				templateFile: "templates/lib/BLANK",
+				path: "{{ turbo.paths.root }}/{{ dashCase name }}/src/index.ts",
+				templateFile: "template/BLANK",
 				type: "add",
 			},
 		],

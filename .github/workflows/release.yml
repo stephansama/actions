@@ -26,5 +26,5 @@ jobs:
             - name: 📦 Installing dependencies
               run: pnpm install
             - name: 📦 Build all actions
-              run: pnpm --recursive build
+              run: pnpm run build
             - uses: int128/release-typescript-action@v1
