@@ -30,6 +30,8 @@ jobs:
       - run: node ./scripts/generate-multi-urls.js
         id: generate
       - uses: stephansama/actions/multi-deployments@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
           invalidate_previous: true
           environments: ${{steps.generate.outputs.environments}}
