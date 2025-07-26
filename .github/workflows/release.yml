@@ -1,0 +1,22 @@
+name: release
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: "pnpm"
+          node-version-file: ".nvmrc"
+      - name: 📦 Installing dependencies
+        run: pnpm install
+      - name: 📦 Build all actions
+        run: pnpm --recursive build
+      - uses: int128/release-typescript-action@v1

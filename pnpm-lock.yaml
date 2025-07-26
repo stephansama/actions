@@ -23,6 +23,9 @@ importers:
       '@eslint/markdown':
         specifier: ^7.1.0
         version: 7.1.0
+      '@tsconfig/recommended':
+        specifier: ^1.0.10
+        version: 1.0.10
       '@types/node':
         specifier: ^24.1.0
         version: 24.1.0
@@ -477,6 +480,9 @@ packages:
     resolution: {integrity: sha512-M/fKi4sasCdM8i0aWJjCSFm2qEnYRR8AMLG2kxp6wD13+tMGA4Z1tVAuHkNRjud5SW2EM3naLuK35w9twvf6aA==}
     cpu: [x64]
     os: [win32]
+
+  '@tsconfig/recommended@1.0.10':
+    resolution: {integrity: sha512-cGvydvg03lONp5Z9yaplW493Vw9/um7k588mvDkm+VFPF2PZUVPx0uswq4PFpeEySsLbQRETrDRhzh4Dmxaslw==}
 
   '@types/debug@4.1.12':
     resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
@@ -1739,6 +1745,8 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.45.1':
     optional: true
+
+  '@tsconfig/recommended@1.0.10': {}
 
   '@types/debug@4.1.12':
     dependencies:
