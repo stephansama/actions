@@ -1,6 +1,9 @@
 name: "@stephansama"
 author: Stephan Randle
 description: "@stephansama suite of github actions"
+branding:
+  icon: layers
+  color: red
 runs:
   using: node20
   main: ./scripts/_index.js
