@@ -1,6 +1,6 @@
 {
 	"name": "multi-deployments",
 	"scripts": {
-		"build": "tsup"
+		"build": "tsup ./src/index.ts"
 	}
 }

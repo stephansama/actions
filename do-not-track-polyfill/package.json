@@ -1,6 +1,6 @@
 {
-  "name": "do-not-track-polyfill",
-  "scripts": {
-    "build": "tsup"
-  }
+	"name": "do-not-track-polyfill",
+	"scripts": {
+		"build": "tsup src/index.ts"
+	}
 }

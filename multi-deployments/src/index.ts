@@ -15,10 +15,12 @@ const urls = environments.map(([, url]) => url as string);
 const token = process.env.GITHUB_TOKEN;
 
 if (!token) {
-	throw new Error("failed to load github token. needed to create deploys");
+	throw new Error(
+		"failed to load $GITHUB_TOKEN. it is needed to create deploys",
+	);
 }
 
-if (!envs.filter(Boolean).length !== !urls.filter(Boolean)) {
+if (!envs.filter(Boolean).length !== !urls.filter(Boolean).length) {
 	throw new Error("the length of environments do not match the urls");
 }
 
