@@ -1,0 +1,6 @@
+name: "@stephansama"
+author: Stephan Randle
+description: "@stephansama suite of github actions"
+runs:
+  using: node20
+  main: ./scripts/_index.js
