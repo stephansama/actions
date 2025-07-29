@@ -26,6 +26,8 @@ jobs:
           node-version-file: ".nvmrc"
       - name: 📦 Installing dependencies
         run: pnpm install
+      - name: 🧪 Create coverage reports
+        run: pnpm run test:ci
       - name: 🧪 Upload coverage reports to Codecov 🔼
         uses: codecov/codecov-action@v5
         with:
