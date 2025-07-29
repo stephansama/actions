@@ -1,3 +1,10 @@
 {
-	"ignoreWords": ["stephansama", "unstub"]
+	"ignoreWords": [
+		"Randle",
+		"Stephan",
+		"nvmrc",
+		"stephansama",
+		"telem",
+		"unstub"
+	]
 }

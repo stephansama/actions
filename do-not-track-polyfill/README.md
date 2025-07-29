@@ -1,20 +1,25 @@
 # 🕵️‍♂️ Do Not Track Polyfill · GitHub Action
 
+[![🧪 Test do not track (False)](https://github.com/stephansama/actions/actions/workflows/test-do-not-track-polyfill-false.yml/badge.svg)](https://github.com/stephansama/actions/actions/workflows/test-do-not-track-polyfill-false.yml)
+[![🧪 Test do not track (True)](https://github.com/stephansama/actions/actions/workflows/test-do-not-track-polyfill-true.yml/badge.svg)](https://github.com/stephansama/actions/actions/workflows/test-do-not-track-polyfill-true.yml)
+
 A simple GitHub Action that conditionally disables telemetry by setting opt-out environment variables for several popular vendors. It ensures your workflow respects privacy-focused settings by preemptively opting out of analytics, usage reporting, and tracking features — if the relevant tools support them.
 
 ---
 
 ## ✨ Features
 
-- Adds common telemetry-related environment variables (e.g., `DO_NOT_TRACK`, `CI`, etc.)
+- Adds common telemetry-related environment variables
+  (e.g., `ASTRO_TELEMETRY_DISABLED`, etc.)
 - Helps opt out of analytics, error reporting, and tracking
-- Supports most major CI-aware packages and telemetry clients
 
 ---
 
 ## 🚀 Usage
 
-Add the action to your workflow **before** any steps that might invoke telemetry-aware tools:
+Add the action to your workflow **before** any steps that might invoke telemetry aware tools
+
+example workflow:
 
 ```yaml
 # .github/workflows/test-do-not-track-polyfill-true.yml
@@ -50,15 +55,12 @@ jobs:
 
 ## 🌱 What It Does
 
-This action sets the following environment variables by default:
+This action conditionally sets additionally environment
+variables to disable telemetry for popular platforms such as:
 
-| Variable             | Value  | Description                                  |
-| -------------------- | ------ | -------------------------------------------- |
-| `DO_NOT_TRACK`       | `1`    | Industry-standard opt-out flag for analytics |
-| `NO_COLOR`           | `1`    | Disables colored output (for cleaner logs)   |
-| `CI`                 | `true` | Ensures packages treat the environment as CI |
-| `DISABLE_TRACKING`   | `1`    | Generic opt-out flag used by some tools      |
-| `TELEMETRY_DISABLED` | `1`    | Used by some telemetry clients to opt out    |
+- AstroJS
+- Storybook
+- Vercel
 
 You can also customize which flags are set (see below).
 
@@ -66,29 +68,21 @@ You can also customize which flags are set (see below).
 
 ## ⚙️ Inputs (Optional)
 
-| Name         | Description                                    | Default |
-| ------------ | ---------------------------------------------- | ------- |
-| `additional` | Newline delimited list of env variables to add | ``      |
+| Name         | Description                                                              | Default |
+| ------------ | ------------------------------------------------------------------------ | ------- |
+| `additional` | valid json object containing environment names and environment variables | `{}`    |
 
 Example:
 
 ```yaml
-- uses: your-org/do-not-track-polyfill-action@v1
+- uses: stephansama/actions/do-not-track-polyfill-action@v1
   with:
-      additional: |
-    OTHER_TECH: false
+      additional: '{"preview": "https://madprofessorblog.org/"}'
 ```
 
 ---
 
 ## 🔒 Why Use This?
 
-- Complies with privacy-focused workflows
+- Allows you to turn on and off
 - Prevents telemetry from bloating CI logs or triggering network requests
-- Encourages ethical software development practices
-
----
-
-## 📜 License
-
-MIT © [@stephansama](https://github.com/stephansama)
