@@ -2,9 +2,13 @@ name: release
 on:
   push:
     branches: [main]
-    paths:
-      - do-not-track-polyfill/*
-      - multi-deployments/*
+    paths-ignore:
+      - "./*.*"
+      - "**/README.md"
+      - ".github/*"
+      - ".husky/*"
+      - "scripts/*"
+      - "turbo/*"
   workflow_dispatch:
 env:
   HUSKY: 0

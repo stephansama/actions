@@ -2,9 +2,12 @@ name: coverage
 on:
   push:
     branches: [main]
-    paths:
-      - do-not-track-polyfill/*
-      - multi-deployments/*
+    paths-ignore:
+      - "./*.*"
+      - ".github/*"
+      - ".husky/*"
+      - "scripts/*"
+      - "turbo/*"
   workflow_dispatch:
 env:
   HUSKY: 0
