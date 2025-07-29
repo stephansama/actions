@@ -1,7 +1,8 @@
 *.hbs
+.editorconfig
 .gitignore
 .husky/*
 .prettierignore
-.editorconfig
 BLANK
 LICENSE
+pnpm-lock.yaml

@@ -1,7 +1,11 @@
 {
-	"singleQuote": false,
 	"quoteProps": "consistent",
-	"useTabs": true,
 	"semi": true,
-	"plugins": []
+	"singleQuote": false,
+	"useTabs": true,
+	"plugins": [
+		"prettier-plugin-jsdoc",
+		"prettier-plugin-organize-imports",
+		"prettier-plugin-sort-package-json"
+	]
 }
