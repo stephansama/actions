@@ -1,0 +1,9 @@
+{
+	"name": "generate-md-action-inputs",
+	"scripts": {
+		"build": "tsup ./src/index.ts"
+	},
+	"devDependencies": {
+		"yaml": "^2.8.0"
+	}
+}

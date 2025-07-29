@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - do-not-track-polyfill/*
+      - generate-md-action-inputs/*
       - multi-deployments/*
   workflow_dispatch:
 env:

@@ -1,0 +1,21 @@
+name: generate-md-action-inputs
+author: Stephan Randle
+description: Generate markdown table containing inputs from github action configuration
+inputs:
+  action:
+    description: Github Action to parse the action.yml file from
+    required: true
+  comment_tag_name:
+    default: ACTION-LIST
+    description: Prefix for delimiting block start and end
+    required: false
+  readme_path:
+    description: Path to the readme file to edit
+    default: ./README.md
+    required: false
+  gh_token:
+    description: Github token scoped to current repo (need to have an environment variable set if not supplied)
+    required: false
+runs:
+  using: node20
+  main: ./dist/index.js
