@@ -44,11 +44,6 @@ export default function generator(plop: PlopTypes.NodePlopAPI) {
 				type: "add",
 			},
 			{
-				path: "{{ turbo.paths.root }}/{{ dashCase name }}/tsup.config.ts",
-				templateFile: "template/tsup.config.ts",
-				type: "add",
-			},
-			{
 				path: "{{ turbo.paths.root }}/{{ dashCase name }}/src/index.ts",
 				templateFile: "template/BLANK",
 				type: "add",

@@ -1,4 +1,5 @@
 name: do-not-track-polyfill
+author: Stephan Randle
 description: Polyfills telemetry environment variables when do not track environment variable is set
 inputs:
   additional:
@@ -6,4 +7,4 @@ inputs:
     description: Additional telemetry providers to block
 runs:
   using: node20
-  main: "./dist/index.js"
+  main: ./dist/index.js

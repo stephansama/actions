@@ -1,12 +1,13 @@
 name: multi-deployments
+author: Stephan Randle
 description: Create multiple deployments during one workflow
 inputs:
   environments:
     required: true
     description: Environments to deploy
   invalidate_previous:
-    required: true
+    required: false
     description: Invalidate previous deploys
 runs:
   using: node20
-  main: "./dist/index.js"
+  main: ./dist/index.js
