@@ -1,13 +1,9 @@
 name: 🧪 Test multi deployments
 on:
-  push:
-    branches: [main]
-    paths:
-      - multi-deployments/*
-  pull_request:
-    branches: [main]
-    paths:
-      - multi-deployments/*
+  workflow_run:
+    workflows: ["release"]
+    types:
+      - completed
   workflow_dispatch:
 env:
   HUSKY: 0
