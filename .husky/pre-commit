@@ -1,4 +1,4 @@
 #!/bin/sh
 
 lint-staged --config .husky/.lintstagedrc.mjs
-pnpm turbo lint test --affected
+vitest --changed HEAD~1
