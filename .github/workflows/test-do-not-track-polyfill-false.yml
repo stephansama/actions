@@ -1,4 +1,4 @@
-name: Test do not track (False)
+name: 🧪 Test do not track (False)
 on:
   push:
     branches: [main]

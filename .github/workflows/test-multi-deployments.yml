@@ -1,4 +1,4 @@
-name: Test multi deployments
+name: 🧪 Test multi deployments
 on:
   push:
     branches: [main]
