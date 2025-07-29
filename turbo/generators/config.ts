@@ -10,13 +10,13 @@ export default function generator(plop: PlopTypes.NodePlopAPI) {
 				type: "input",
 				validate(input: string) {
 					if (input.includes(".")) {
-						return "library name cannot include an extension";
+						return "action name cannot include an extension";
 					}
 					if (input.includes(" ")) {
-						return "library name cannot include spaces";
+						return "action name cannot include spaces";
 					}
 					if (!input) {
-						return "library name is required";
+						return "action name is required";
 					}
 					return true;
 				},

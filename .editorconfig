@@ -14,3 +14,6 @@ insert_final_newline = true
 # Default
 [*.{*rc,cjs,config.{ts,js,mjs},html,json,yml,yaml}]
 indent_size = 2
+
+[turbo/generators/config.ts]
+indent_size = 2
