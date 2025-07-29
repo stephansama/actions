@@ -2,13 +2,14 @@ name: release
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "./*.*"
-      - "**/README.md"
-      - ".github/*"
-      - ".husky/*"
-      - "scripts/*"
-      - "turbo/*"
+    paths:
+      - "./*"
+      - "!./*.*"
+      - "!**/README.md"
+      - "!.github/*"
+      - "!.husky/*"
+      - "!scripts/*"
+      - "!turbo/*"
   workflow_dispatch:
 env:
   HUSKY: 0

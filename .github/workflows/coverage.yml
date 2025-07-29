@@ -2,12 +2,14 @@ name: coverage
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "./*.*"
-      - ".github/*"
-      - ".husky/*"
-      - "scripts/*"
-      - "turbo/*"
+    paths:
+      - "./*"
+      - "!./*.*"
+      - "!**/README.md"
+      - "!.github/*"
+      - "!.husky/*"
+      - "!scripts/*"
+      - "!turbo/*"
   workflow_dispatch:
 env:
   HUSKY: 0
