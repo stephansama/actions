@@ -1,2 +1,4 @@
 packages:
   - ./*
+ignoredBuiltDependencies:
+  - core-js-pure
