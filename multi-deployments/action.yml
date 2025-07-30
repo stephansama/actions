@@ -8,6 +8,7 @@ inputs:
   invalidate_previous:
     required: false
     description: Invalidate previous deploys
+    default: "false"
 runs:
   using: node20
   main: ./dist/index.js
