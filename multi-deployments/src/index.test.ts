@@ -29,13 +29,16 @@ vi.mock("@actions/github", () => ({
 
 describe("multi-deployments", () => {
 	beforeEach(() => {
-		vi.unstubAllEnvs();
 		vi.resetAllMocks();
-		vi.unstubAllGlobals();
+		vi.resetModules();
+		vi.unstubAllEnvs();
 	});
 
 	describe("run", () => {
 		it("fails to run when nothing is supplied", async () => {
+			vi.stubEnv("GITHUB_REF", "");
+			vi.stubEnv("GITHUB_TOKEN", "");
+
 			await expect(module.run).rejects.toThrowError();
 		});
 
@@ -75,8 +78,8 @@ describe("multi-deployments", () => {
 		);
 
 		it("returns the proper values when proper input variables are supplied", () => {
-			const envToken = "token";
-			const envRef = "ref";
+			const envToken = process.env.GITHUB_TOKEN || "token";
+			const envRef = process.env.GITHUB_REF || "ref";
 
 			vi.stubEnv("GITHUB_TOKEN", envToken);
 			vi.stubEnv("GITHUB_REF", envRef);
