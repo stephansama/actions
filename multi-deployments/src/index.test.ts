@@ -22,7 +22,7 @@ vi.mock("@actions/core", () => ({
 vi.mock("@actions/github", () => ({
 	context: {
 		sha: "f3fb078cbfe3342f5032d5abb9260080e2f89d9d6ce6647c20bc23842fa0a0e7",
-		repo: { owner: "stephansama", repo: "actions," },
+		repo: { owner: "stephansama", repo: "actions" },
 	},
 	getOctokit: mocks.getOctokit,
 }));
