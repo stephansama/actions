@@ -3,11 +3,16 @@ author: Stephan Randle
 description: Create multiple deployments during one workflow
 inputs:
   environments:
-    required: true
     description: Environments to deploy
+    required: true
   invalidate_previous:
-    required: false
+    default: "false"
     description: Invalidate previous deploys
+    required: false
+  ref:
+    default: ""
+    description: Commit ref to reference for deploys (automatically uses Github CI environments)
+    required: false
 runs:
   using: node20
   main: ./dist/index.js

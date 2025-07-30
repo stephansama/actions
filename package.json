@@ -3,10 +3,9 @@
 	"license": "MIT",
 	"type": "module",
 	"scripts": {
-		"build": "turbo build",
 		"dev": "turbo dev --filter=$(ls . | fzf)",
-		"lint": "turbo lint",
-		"test": "vitest --run",
+		"lint": "eslint .",
+		"build": "turbo build",
 		"test:ci": "vitest run --coverage",
 		"test:ui": "vitest --ui",
 		"prepare": "husky"
@@ -28,6 +27,7 @@
 		"@vitest/coverage-v8": "^3.2.4",
 		"@vitest/ui": "^3.2.4",
 		"eslint": "^9.32.0",
+		"eslint-config-flat-gitignore": "^2.1.0",
 		"globals": "^16.3.0",
 		"husky": "^9.1.7",
 		"jiti": "^2.5.1",
