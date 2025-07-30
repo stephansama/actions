@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
 	createDeployment: vi.fn(),
 	createDeploymentStatus: vi.fn(),
 	getInput: vi.fn(),
+	isInvoked: vi.fn(),
 	getOctokit: vi.fn(() => ({
 		rest: {
 			repos: {
@@ -65,6 +66,9 @@ describe("multi-deployments", () => {
 
 	describe("loadEnvVariables", () => {
 		it("throws an error when no environment variables are supplied", () => {
+			process.env.GITHUB_HEAD_REF = "";
+			process.env.GITHUB_REF = "";
+			process.env.GITHUB_TOKEN = "";
 			expect(() => module.loadEnvVariables()).toThrowError();
 		});
 
