@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as module from "./index";
 
 const mocks = vi.hoisted(() => ({
@@ -34,10 +34,13 @@ describe("multi-deployments", () => {
 		vi.unstubAllEnvs();
 	});
 
+	afterEach(() => {
+		delete process.env.GITHUB_TOKEN;
+	});
+
 	describe("run", () => {
 		it("fails to run when nothing is supplied", async () => {
-			vi.stubEnv("GITHUB_REF", "");
-			vi.stubEnv("GITHUB_TOKEN", "");
+			process.env.GITHUB_TOKEN = "";
 
 			await expect(module.run).rejects.toThrowError();
 		});
@@ -79,7 +82,7 @@ describe("multi-deployments", () => {
 
 		it("returns the proper values when proper input variables are supplied", () => {
 			const envToken = process.env.GITHUB_TOKEN || "token";
-			const envRef = process.env.GITHUB_REF || "ref";
+			const envRef = process.env.GITHUB_HEAD_REF || "ref";
 
 			vi.stubEnv("GITHUB_TOKEN", envToken);
 			vi.stubEnv("GITHUB_REF", envRef);
