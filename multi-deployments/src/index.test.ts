@@ -149,6 +149,7 @@ describe("multi-deployments", () => {
 		it("throws an error when there are invalid environment urls", () => {
 			const environments = Object.entries({
 				["test-1"]: undefined,
+				["test-2"]: "https://www.google.com",
 			}) as unknown as [string, string][];
 
 			expect(() => module.parseEnvironments(environments)).toThrowError();

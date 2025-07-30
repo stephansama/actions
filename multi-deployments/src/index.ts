@@ -66,7 +66,7 @@ export function parseEnvironments(environments: [string, string][]) {
 	const envs = environments.map(([env]) => env).filter(Boolean);
 	const urls = environments.map(([, url]) => url).filter(Boolean);
 
-	if (!envs.length !== !urls.length) {
+	if (envs.length !== urls.length) {
 		throw new Error("the length of environments do not match the urls");
 	}
 
