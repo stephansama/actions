@@ -4,6 +4,7 @@ on:
     branches: [master]
     paths:
       - multi-deployments/*
+      - ./.github/test-multi-deployments.yml
   workflow_run:
     workflows: ["release"]
     types:
@@ -22,6 +23,7 @@ permissions:
 jobs:
   preview:
     runs-on: ubuntu-latest
+    if: ${{!(github.event.workflow_run.conclusion == 'success')}}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -35,7 +37,7 @@ jobs:
         run: pnpm run build
       - run: node ./scripts/generate-multi-urls.js
         id: generate
-      - uses: ./multi-deployments/dist/index.js
+      - uses: ./multi-deployments
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
@@ -43,6 +45,7 @@ jobs:
           environments: ${{steps.generate.outputs.environments}}
   release:
     runs-on: ubuntu-latest
+    if: ${{github.event.workflow_run.conclusion == 'success'}}
     steps:
       - uses: actions/checkout@v4
         with:
