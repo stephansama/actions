@@ -5,18 +5,13 @@ on:
   push:
     branches: [main]
     paths:
-      - "./*"
-      - "!./*.*"
-      - "!**/README.md"
-      - "!.github/*"
-      - "!.husky/*"
-      - "!scripts/*"
-      - "!turbo/*"
+      - do-not-track-polyfill/*
+      - multi-deployments/*
   workflow_dispatch:
 env:
   HUSKY: 0
 jobs:
-  release:
+  coverage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

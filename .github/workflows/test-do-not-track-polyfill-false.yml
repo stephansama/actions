@@ -1,5 +1,9 @@
 name: 🧪 Test do not track (False)
 on:
+  pull_request:
+    branches: [master]
+    paths:
+      - do-not-track-polyfill/*
   workflow_run:
     workflows: ["release"]
     types:
@@ -9,8 +13,25 @@ env:
   DO_NOT_TRACK: 0
   HUSKY: 0
 jobs:
+  preview:
+    runs-on: ubuntu-latest
+    if: ${{!(github.event.workflow_run.conclusion == 'success')}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: "pnpm"
+          node-version-file: ".nvmrc"
+      - name: 📦 Installing dependencies
+        run: pnpm install
+      - name: 📦 Build all actions
+        run: pnpm run build
+      - uses: ./do-not-track-polyfill
+      - run: node ./scripts/verify-do-not-track.js
   release:
     runs-on: ubuntu-latest
+    if: ${{github.event.workflow_run.conclusion == 'success'}}
     steps:
       - uses: stephansama/actions/do-not-track-polyfill@v1
       - uses: actions/checkout@v4

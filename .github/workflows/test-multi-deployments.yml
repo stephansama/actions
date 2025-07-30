@@ -1,5 +1,9 @@
 name: 🧪 Test multi deployments
 on:
+  pull_request:
+    branches: [master]
+    paths:
+      - multi-deployments/*
   workflow_run:
     workflows: ["release"]
     types:
@@ -16,8 +20,31 @@ permissions:
   pull-requests: write
   statuses: write
 jobs:
+  preview:
+    runs-on: ubuntu-latest
+    if: ${{!(github.event.workflow_run.conclusion == 'success')}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: "pnpm"
+          node-version-file: ".nvmrc"
+      - name: 📦 Installing dependencies
+        run: pnpm install
+      - name: 📦 Build all actions
+        run: pnpm run build
+      - run: node ./scripts/generate-multi-urls.js
+        id: generate
+      - uses: ./multi-deployments
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          invalidate_previous: true
+          environments: ${{steps.generate.outputs.environments}}
   release:
     runs-on: ubuntu-latest
+    if: ${{github.event.workflow_run.conclusion == 'success'}}
     steps:
       - uses: actions/checkout@v4
         with:
