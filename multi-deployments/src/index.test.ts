@@ -75,6 +75,9 @@ describe("multi-deployments", () => {
 		])(
 			"throws an error when missing one environment variable",
 			(env, value) => {
+				process.env.GITHUB_HEAD_REF = "";
+				process.env.GITHUB_REF = "";
+				process.env.GITHUB_TOKEN = "";
 				vi.stubEnv(env, value);
 				expect(module.loadEnvVariables).toThrowError();
 			},
