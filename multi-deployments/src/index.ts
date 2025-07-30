@@ -1,9 +1,7 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 
-if (isInvoked()) {
-	run();
-}
+if (require.main === module) run();
 
 export async function run() {
 	const { ref, token } = loadEnvVariables();
@@ -56,10 +54,6 @@ export async function run() {
 			}),
 		),
 	);
-}
-
-export function isInvoked() {
-	return require.main === module;
 }
 
 export function parseEnvironments(environments: [string, string][]) {
