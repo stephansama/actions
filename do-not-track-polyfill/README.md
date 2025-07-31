@@ -1,4 +1,4 @@
-# 🕵️‍♂️ Do Not Track Polyfill · GitHub Action
+# 🕵️‍♂️ Do Not Track Polyfill
 
 [![🧪 Test do not track (False)](https://github.com/stephansama/actions/actions/workflows/test-do-not-track-polyfill-false.yml/badge.svg)](https://github.com/stephansama/actions/actions/workflows/test-do-not-track-polyfill-false.yml)
 [![🧪 Test do not track (True)](https://github.com/stephansama/actions/actions/workflows/test-do-not-track-polyfill-true.yml/badge.svg)](https://github.com/stephansama/actions/actions/workflows/test-do-not-track-polyfill-true.yml)
@@ -22,33 +22,16 @@ Add the action to your workflow **before** any steps that might invoke telemetry
 example workflow:
 
 ```yaml
-# .github/workflows/test-do-not-track-polyfill-true.yml
-name: Do not track
+# .github/workflows/examples/do-not-track-polyfill.yml
+name: do-not-track-polyfill example
 on:
-    push:
-        branches: [main]
-    pull_request:
-        branches: [main]
     workflow_dispatch:
-env:
-    DO_NOT_TRACK: 1
-permissions:
-    actions: write
-    contents: write
-    id-token: write
-    pull-requests: write
-    statuses: write
 jobs:
-    release:
+    example:
         runs-on: ubuntu-latest
+        if: ${{github.event.workflow_run.conclusion != 'success'}}
         steps:
             - uses: stephansama/actions/do-not-track-polyfill@v1
-            - uses: actions/checkout@v4
-              with:
-                  sparse-checkout: |
-                      scripts
-            - uses: actions/setup-node@v4
-            - run: node ./scripts/verify-do-not-track.js
 ```
 
 ---
