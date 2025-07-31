@@ -31,10 +31,10 @@ export async function run() {
 	);
 
 	await Promise.all(
-		deploymentData.map(async (data) =>
+		deploymentData.map(async (dep) =>
 			octokit.rest.repos.createDeploymentStatus({
 				...commonProps,
-				deployment_id: parseInt(data.data.id, 10),
+				deployment_id: "id" in dep.data ? dep.data.id : 0,
 				state: "in_progress",
 			}),
 		),
@@ -46,7 +46,7 @@ export async function run() {
 		deploymentData.map(async (dep, i) =>
 			octokit.rest.repos.createDeploymentStatus({
 				...commonProps,
-				deployment_id: parseInt(dep.data.id, 10),
+				deployment_id: "id" in dep.data ? dep.data.id : 0,
 				environment_url: urls[i],
 				log_url,
 				ref,
