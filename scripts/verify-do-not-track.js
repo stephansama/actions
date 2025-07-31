@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-if (process.env.DO_NOT_TRACK !== "1" || process.env.DO_NOT_TRACK !== "true") {
+if (process.env.DO_NOT_TRACK !== "1" && process.env.DO_NOT_TRACK !== "true") {
 	console.info("DO_NOT_TRACK not set. not running verification script");
 	process.exit(0);
 }
