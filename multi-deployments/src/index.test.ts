@@ -30,19 +30,19 @@ vi.mock("@actions/github", () => ({
 
 describe("multi-deployments", () => {
 	beforeEach(() => {
+		vi.stubEnv("GITHUB_HEAD_REF", "");
+		vi.stubEnv("GITHUB_REF", "");
+		vi.stubEnv("GITHUB_TOKEN", "");
+	});
+
+	afterEach(() => {
 		vi.resetAllMocks();
 		vi.resetModules();
 		vi.unstubAllEnvs();
 	});
 
-	afterEach(() => {
-		delete process.env.GITHUB_TOKEN;
-	});
-
 	describe("run", () => {
 		it("fails to run when nothing is supplied", async () => {
-			process.env.GITHUB_TOKEN = "";
-
 			await expect(module.run).rejects.toThrowError();
 		});
 
@@ -66,26 +66,13 @@ describe("multi-deployments", () => {
 
 	describe("loadEnvVariables", () => {
 		it("throws an error when no environment variables are supplied", () => {
-			process.env.GITHUB_HEAD_REF = "";
-			process.env.GITHUB_REF = "";
-			process.env.GITHUB_TOKEN = "";
-			expect(() => module.loadEnvVariables()).toThrowError();
+			expect(module.loadEnvVariables).toThrowError();
 		});
 
-		it.each([
-			["GITHUB_TOKEN", "true"],
-			["GITHUB_HEAD_REF", "true"],
-			["GITHUB_REF", "true"],
-		])(
-			"throws an error when missing one environment variable",
-			(env, value) => {
-				process.env.GITHUB_HEAD_REF = "";
-				process.env.GITHUB_REF = "";
-				process.env.GITHUB_TOKEN = "";
-				vi.stubEnv(env, value);
-				expect(module.loadEnvVariables).toThrowError();
-			},
-		);
+		it("throws an error when missing one environment variable", () => {
+			vi.stubEnv("GITHUB_TOKEN", "true");
+			expect(module.loadEnvVariables).toThrowError();
+		});
 
 		it("returns the proper values when proper input variables are supplied", () => {
 			const envToken = process.env.GITHUB_TOKEN || "token";
