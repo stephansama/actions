@@ -150,7 +150,7 @@ describe("multi-deployments", () => {
 			const environments = Object.entries({
 				["test-1"]: undefined,
 				["test-2"]: "https://www.google.com",
-			}) as unknown as [string, string][];
+			}) as [string, string][];
 
 			expect(() => module.parseEnvironments(environments)).toThrowError();
 		});
