@@ -7,3 +7,6 @@ jobs:
     if: ${{github.event.workflow_run.conclusion != 'success'}}
     steps:
       - uses: stephansama/actions/do-not-track-polyfill@v1
+        with:
+          additional: |
+            EXAMPLE_DISABLE_CHECK=true

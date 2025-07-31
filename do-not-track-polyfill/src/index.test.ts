@@ -1,3 +1,4 @@
+import dotenvx from "@dotenvx/dotenvx";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTelemetryEnvironments } from "./index";
 
@@ -34,21 +35,26 @@ describe("do-not-track-polyfill", () => {
 		});
 
 		it("enables additional environment variables when supplied", async () => {
-			const mockReturn = { ADDITIONAL_TELEMETRY: 1, SPY_ON_ME: false };
+			const sh = String.raw;
+			const mockGetInput = sh`
+ADDITIONAL_TELEMETRY=1
+SPY_ON_ME=false
+`;
 
-			mocks.getInput.mockReturnValue(JSON.stringify(mockReturn));
+			const parsedEnv = dotenvx.parse(mockGetInput);
+
+			mocks.getInput.mockReturnValue(mockGetInput);
 
 			await import("./index");
 
 			expect(mocks.getInput).toHaveBeenCalled();
 
-			for (const [key, val] of Object.entries(mockReturn)) {
+			for (const [key, val] of Object.entries(parsedEnv)) {
 				expect(mocks.exportVariable).toHaveBeenCalledWith(key, val);
 			}
 
 			const times =
-				Object.keys(mockReturn).length +
-				Object.keys(defaultEnvs).length;
+				Object.keys(parsedEnv).length + Object.keys(defaultEnvs).length;
 
 			expect(mocks.exportVariable).toHaveBeenCalledTimes(times);
 		});
@@ -60,14 +66,6 @@ describe("do-not-track-polyfill", () => {
 
 			expect(mocks.exportVariable).toHaveBeenCalledTimes(times);
 			expect(mocks.getInput).toHaveBeenCalled();
-		});
-
-		it("throws an error when an invalid additional environment variables object is passed", async () => {
-			mocks.getInput.mockReturnValue(
-				JSON.stringify({ obj: 1 }).slice(1, 14),
-			);
-
-			await expect(import("./index")).rejects.toThrow();
 		});
 	});
 

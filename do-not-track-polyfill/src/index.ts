@@ -1,6 +1,7 @@
 import * as core from "@actions/core";
+import dotenvx from "@dotenvx/dotenvx";
 
-if (process.env.DO_NOT_TRACK === "1" || process.env.DO_NOT_TRACK === "true") {
+if (["1", "true"].includes(process.env.DO_NOT_TRACK || "")) {
 	const additionalEnv = parseAdditionalEnvironments();
 	const telemetryEnvs = getTelemetryEnvironments();
 	const environments = [additionalEnv, telemetryEnvs].flatMap(Object.entries);
@@ -10,11 +11,8 @@ if (process.env.DO_NOT_TRACK === "1" || process.env.DO_NOT_TRACK === "true") {
 	}
 }
 
-export function parseAdditionalEnvironments(): Record<
-	string,
-	number | boolean | string
-> {
-	return JSON.parse(core.getInput("additional") || "{}");
+export function parseAdditionalEnvironments(): dotenvx.DotenvParseOutput {
+	return dotenvx.parse(core.getInput("additional") || "");
 }
 
 export function getTelemetryEnvironments() {

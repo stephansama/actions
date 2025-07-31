@@ -51,16 +51,17 @@ You can also customize which flags are set (see below).
 
 ## ⚙️ Inputs (Optional)
 
-| Name         | Description                                                              | Default |
-| ------------ | ------------------------------------------------------------------------ | ------- |
-| `additional` | valid json object containing environment names and environment variables | `{}`    |
+| Name         | Description                                                              |
+| ------------ | ------------------------------------------------------------------------ |
+| `additional` | valid json object containing environment names and environment variables |
 
 Example:
 
 ```yaml
 - uses: stephansama/actions/do-not-track-polyfill-action@v1
   with:
-      additional: '{"preview": "https://madprofessorblog.org/"}'
+      additional: |
+     TEST=https://test.com
 ```
 
 ---
