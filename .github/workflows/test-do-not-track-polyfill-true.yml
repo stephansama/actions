@@ -1,7 +1,6 @@
 name: 🧪 Test do not track (True)
 on:
   pull_request:
-    branches: [main]
     paths:
       - do-not-track-polyfill/*
   workflow_run:

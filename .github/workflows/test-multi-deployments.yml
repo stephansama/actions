@@ -1,7 +1,6 @@
 name: 🧪 Test multi deployments
 on:
   pull_request:
-    branches: [main]
     paths:
       - multi-deployments/*
   workflow_run:
