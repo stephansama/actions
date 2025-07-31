@@ -69,7 +69,12 @@ describe("multi-deployments", () => {
 			expect(module.loadEnvVariables).toThrowError();
 		});
 
-		it("throws an error when missing one environment variable", () => {
+		it("throws an error when token is missing", () => {
+			vi.stubEnv("GITHUB_REF", "true");
+			expect(module.loadEnvVariables).toThrowError();
+		});
+
+		it("throws an error when ref is missing", () => {
 			vi.stubEnv("GITHUB_TOKEN", "true");
 			expect(module.loadEnvVariables).toThrowError();
 		});
