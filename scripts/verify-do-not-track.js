@@ -10,6 +10,8 @@ for (const env of [
 	"TURBO_TELEMETRY_DISABLED",
 	"VERCEL_TELEMETRY_DISABLED",
 	"WRANGLER_SEND_METRICS",
+	"ADDITIONAL_DISABLE_TELEMETRY",
+	"TRACK_ME_PLEASE",
 ]) {
 	if (!process.env[env]) throw new Error(`env variable ${env} is not set`);
 	console.info("verified ", env);

@@ -2,5 +2,8 @@
 	"name": "do-not-track-polyfill",
 	"scripts": {
 		"build": "tsup src/index.ts"
+	},
+	"devDependencies": {
+		"@dotenvx/dotenvx": "^1.48.4"
 	}
 }
