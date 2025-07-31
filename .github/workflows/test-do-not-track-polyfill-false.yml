@@ -6,8 +6,7 @@ on:
       - do-not-track-polyfill/*
   workflow_run:
     workflows: ["release"]
-    types:
-      - completed
+    types: ["completed"]
   workflow_dispatch:
 env:
   DO_NOT_TRACK: 0
@@ -15,7 +14,7 @@ env:
 jobs:
   preview:
     runs-on: ubuntu-latest
-    if: ${{!(github.event.workflow_run.conclusion == 'success')}}
+    if: ${{github.event.workflow_run.conclusion != 'success'}}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -25,7 +24,7 @@ jobs:
           node-version-file: ".nvmrc"
       - name: 📦 Installing dependencies
         run: pnpm install
-      - name: 📦 Build all actions
+      - name: 🏗️ Build all actions
         run: pnpm run build
       - uses: ./do-not-track-polyfill
       - run: node ./scripts/verify-do-not-track.js

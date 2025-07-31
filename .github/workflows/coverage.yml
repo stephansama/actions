@@ -5,8 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - do-not-track-polyfill/*
-      - multi-deployments/*
+      - "**.ts"
   workflow_dispatch:
 env:
   HUSKY: 0
