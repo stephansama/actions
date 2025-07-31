@@ -1,11 +1,8 @@
 name: 🧪 Test do not track (True)
 on:
   pull_request:
-    paths:
-      - do-not-track-polyfill/*
-  push:
-    paths:
-      - multi-deployments/*
+    branches: [main]
+    paths: ["do-not-track-polyfill/**"]
   workflow_run:
     workflows: ["release"]
     types: ["completed"]

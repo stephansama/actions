@@ -1,11 +1,8 @@
 name: 🧪 Test multi deployments
 on:
   pull_request:
-    paths:
-      - multi-deployments/*
-  push:
-    paths:
-      - multi-deployments/*
+    branches: [main]
+    paths: ["multi-deployments/**"]
   workflow_run:
     workflows: ["release"]
     types: ["completed"]
