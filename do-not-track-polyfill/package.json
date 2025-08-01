@@ -3,6 +3,7 @@
 	"scripts": {
 		"build": "tsup src/index.ts"
 	},
+	"main": "./src/index.ts",
 	"devDependencies": {
 		"@dotenvx/dotenvx": "^1.48.4"
 	}
