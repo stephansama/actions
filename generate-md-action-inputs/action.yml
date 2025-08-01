@@ -6,7 +6,7 @@ inputs:
     description: Github Action to parse the action.yml file from
     required: true
   comment_tag_name:
-    default: ACTION-LIST
+    default: ACTION-INPUT-LIST
     description: Prefix for delimiting block start and end
     required: false
   readme_path:

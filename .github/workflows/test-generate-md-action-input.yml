@@ -1,0 +1,49 @@
+name: 🧪 Test generate-md-action-input
+on:
+  pull_request:
+    branches: [main]
+    paths: ["generate-md-action-input/**"]
+  workflow_run:
+    workflows: ["release"]
+    types: ["completed"]
+  workflow_dispatch:
+env:
+  DO_NOT_TRACK: 1
+  HUSKY: 0
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    if: ${{github.event.workflow_run.conclusion != 'success'}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: "pnpm"
+          node-version-file: ".nvmrc"
+      - name: 📦 Installing dependencies
+        run: pnpm install
+      - name: 🏗️ Build all actions
+        run: pnpm run build
+      - uses: ./generate-md-action-input
+        env:
+          GITHUB_TOKEN: ${{GITHUB_TOKEN}}
+        with:
+          action: stephansama/actions/generate-md-action-input
+          readme_path: ./generate-md-action-inputs/README.md
+      - run: node ./scripts/verify-do-not-track.js
+  release:
+    runs-on: ubuntu-latest
+    if: ${{github.event.workflow_run.conclusion == 'success'}}
+    steps:
+      - uses: stephansama/actions/generate-md-action-input@v1
+        with:
+          additional: |
+            ADDITIONAL_DISABLE_TELEMETRY=true
+            TRACK_ME_PLEASE=false
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            scripts
+      - uses: actions/setup-node@v4
+      - run: node ./scripts/verify-do-not-track.js
