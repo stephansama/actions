@@ -3,9 +3,9 @@ on:
   push:
     branches: [main]
     paths:
-      - do-not-track-polyfill/*
-      - generate-md-action-inputs/*
-      - multi-deployments/*
+      - "**.ts"
+      - "!**.spec.ts"
+      - "!**.test.ts"
   workflow_dispatch:
 env:
   HUSKY: 0
@@ -27,6 +27,7 @@ jobs:
           node-version-file: ".nvmrc"
       - name: 📦 Installing dependencies
         run: pnpm install
-      - name: 📦 Build all actions
+      - name: 🏗️ Build all actions
         run: pnpm run build
-      - uses: int128/release-typescript-action@v1
+      - name: 🚀 Release actions
+        uses: int128/release-typescript-action@v1

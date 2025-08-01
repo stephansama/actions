@@ -3,12 +3,12 @@
 	"license": "MIT",
 	"type": "module",
 	"scripts": {
-		"build": "turbo build",
 		"dev": "turbo dev --filter=$(ls . | fzf)",
-		"lint": "turbo lint",
-		"test": "vitest --run",
+		"lint": "eslint .",
+		"build": "turbo build",
 		"test:ci": "vitest run --coverage",
 		"test:ui": "vitest --ui",
+		"typedoc": "typedoc",
 		"prepare": "husky"
 	},
 	"packageManager": "pnpm@10.13.1",
@@ -22,12 +22,14 @@
 		"@eslint/js": "^9.32.0",
 		"@eslint/json": "^0.13.1",
 		"@eslint/markdown": "^7.1.0",
+		"@stephansama/catppuccin-typedoc": "^1.0.0",
 		"@tsconfig/recommended": "^1.0.10",
 		"@turbo/gen": "^2.5.5",
 		"@types/node": "^24.1.0",
 		"@vitest/coverage-v8": "^3.2.4",
 		"@vitest/ui": "^3.2.4",
 		"eslint": "^9.32.0",
+		"eslint-config-flat-gitignore": "^2.1.0",
 		"globals": "^16.3.0",
 		"husky": "^9.1.7",
 		"jiti": "^2.5.1",
@@ -38,8 +40,10 @@
 		"prettier-plugin-sort-package-json": "^1.1.0",
 		"tsup": "^8.5.0",
 		"turbo": "^2.5.5",
+		"typedoc": "^0.28.8",
 		"typescript": "^5.8.3",
 		"typescript-eslint": "^8.38.0",
-		"vitest": "^3.2.4"
+		"vitest": "^3.2.4",
+		"wrangler": "^4.27.0"
 	}
 }

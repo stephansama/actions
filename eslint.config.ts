@@ -1,9 +1,10 @@
 import js from "@eslint/js";
-import globals from "globals";
-import tseslint from "typescript-eslint";
 import json from "@eslint/json";
 import markdown from "@eslint/markdown";
+import gitignore from "eslint-config-flat-gitignore";
 import { defineConfig } from "eslint/config";
+import globals from "globals";
+import tseslint from "typescript-eslint";
 
 export default defineConfig([
 	{
@@ -12,7 +13,14 @@ export default defineConfig([
 		extends: ["js/recommended"],
 		languageOptions: { globals: globals.node },
 	},
+	// @ts-expect-error https://github.com/typescript-eslint/typescript-eslint/issues/10899
 	tseslint.configs.recommended,
+	gitignore(),
+	{
+		rules: {
+			"no-console": ["warn", { allow: ["warn", "error", "info"] }],
+		},
+	},
 	{
 		files: ["**/*.json"],
 		plugins: { json },
