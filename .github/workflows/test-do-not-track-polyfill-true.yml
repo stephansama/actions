@@ -2,7 +2,7 @@ name: 🧪 Test do not track (True)
 on:
   pull_request:
     branches: [main]
-    paths: ["do-not-track-polyfill/**"]
+    paths: ["do-not-track-polyfill/**.ts"]
   workflow_run:
     workflows: ["release"]
     types: ["completed"]

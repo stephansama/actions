@@ -2,7 +2,7 @@ name: 🧪 Test multi deployments
 on:
   pull_request:
     branches: [main]
-    paths: ["multi-deployments/**"]
+    paths: ["multi-deployments/**.ts"]
   workflow_run:
     workflows: ["release"]
     types: ["completed"]

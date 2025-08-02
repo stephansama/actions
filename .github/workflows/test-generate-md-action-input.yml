@@ -2,7 +2,7 @@ name: 🧪 Test generate-md-action-inputs
 on:
   pull_request:
     branches: [main]
-    paths: ["generate-md-action-inputs/**"]
+    paths: ["generate-md-action-inputs/**.ts"]
   workflow_run:
     workflows: ["release"]
     types: ["completed"]
