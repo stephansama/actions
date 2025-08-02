@@ -28,6 +28,7 @@ const GitProviders = {
 if (require.main === module) run();
 
 async function run() {
+	await pullGit();
 	const inputs = loadInputs();
 	const readmes = await updateLocalActionReadmes(inputs);
 	if (inputs.skip_commit) {
@@ -144,6 +145,11 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 	).filter((f) => f !== "false");
 }
 
+async function pullGit() {
+	await sh` git config pull.rebase true `;
+	await sh` git pull `;
+}
+
 async function setupGit(inputs: Inputs) {
 	await sh`
 git config --global user.email ${inputs.committer_email}
@@ -154,9 +160,6 @@ git config --global user.name ${inputs.committer_username}
 		await sh`
 git remote set-url origin https://${inputs.gh_token}@github.com/${process.env.GITHUB_REPOSITORY}.git
 `;
-
-		await sh` git config pull.rebase true `;
-		await sh` git pull `;
 	}
 }
 
