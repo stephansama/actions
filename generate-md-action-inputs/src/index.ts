@@ -138,6 +138,9 @@ git config --global user.name ${inputs.committer_username}
 		await sh`
 git remote set-url origin https://${inputs.gh_token}@github.com/${process.env.GITHUB_REPOSITORY}.git
 `;
+
+		await sh` git config pull.rebase true `;
+		await sh` git pull `;
 	}
 }
 
