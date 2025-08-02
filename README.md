@@ -10,6 +10,7 @@ from managing deployments to ensuring privacy-focused telemetry.
 ## **📦 Actions**
 
 - [do-not-track-polyfill](./do-not-track-polyfill/README.md)
+- [generate-md-action-inputs](./generate-md-action-inputs/README.md)
 - [multi-deployments](./multi-deployments/README.md)
 
 ### Codecov graph report
