@@ -32,7 +32,7 @@ inputs:
     required: false
   git_provider:
     default: github
-    description: Prefix for delimiting block start and end
+    description: Git Provider to base remote urls from
     required: false
   heading:
     default: ⚙️ Inputs
