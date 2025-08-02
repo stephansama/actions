@@ -12,15 +12,24 @@ type ActionInputOptions = {
 	required?: boolean;
 };
 
-export type ActionType = { inputs?: Record<string, ActionInputOptions> };
-export type TableHeading = keyof ActionInputOptions | "name";
-export type GitProvider = keyof typeof GitProviders;
+type ActionType = { inputs?: Record<string, ActionInputOptions> };
+type GitProvider = keyof typeof GitProviders;
+type TableHeading = keyof ActionInputOptions | "name";
 export type Inputs = ReturnType<typeof loadInputs>;
+export type ActionData = Awaited<ReturnType<typeof loadActionData>>;
+export type BuiltCommentTags = ReturnType<typeof buildCommentTags>;
 
 const GitProviders = {
 	github: "https://github.com",
 	gitlab: "https://gitlab.com",
 };
+
+const TableOrder: TableHeading[] = [
+	"name",
+	"default",
+	"description",
+	"required",
+];
 
 if (require.main === module) run();
 
@@ -37,13 +46,6 @@ async function run() {
 	}
 }
 
-const TableOrder: TableHeading[] = [
-	"name",
-	"default",
-	"description",
-	"required",
-];
-
 function mapEntryToOrder(order: TableHeading[]) {
 	return ([name, value]: [string, ActionInputOptions]) =>
 		order.map((o) => (value[o as keyof typeof value] || name) + "");
@@ -59,11 +61,11 @@ export function createHeading(inputs: Inputs) {
 	return `${headingLevel} ${inputs.heading}`;
 }
 
-async function getGitRoot() {
+export async function getGitRoot() {
 	return (await sh`git rev-parse --show-toplevel`).stdout.trim();
 }
 
-async function getActionsPaths(gitRoot: string) {
+export async function getActionsPaths(gitRoot: string) {
 	const { stdout } = await sh`
 cd ${gitRoot}
 find . -type f -name 'action.y*ml'
@@ -88,7 +90,7 @@ export function buildCommentTags(tagName: string) {
 
 export function findIndices(
 	lines: string[],
-	[startTag, endTag]: ReturnType<typeof buildCommentTags>,
+	[startTag, endTag]: BuiltCommentTags,
 ) {
 	const startIndex = lines.lastIndexOf(startTag);
 	const endIndex = lines.lastIndexOf(endTag);
@@ -100,80 +102,82 @@ export function findIndices(
 	return [startIndex, endIndex];
 }
 
+export async function loadActionData(actionPath: string) {
+	const opts: { encoding: BufferEncoding } = { encoding: "utf8" };
+	const file = await fsp.readFile(actionPath, opts);
+	const data = yaml.parse(file) as ActionType;
+	const readmePath = actionPath.replace(/action.y*ml/, "README.md");
+	const readme =
+		fs.existsSync(readmePath) && (await fsp.readFile(readmePath, opts));
+	return { actionPath, data, readme, readmePath };
+}
+
+export function isValidActionData(startTag: BuiltCommentTags[0]) {
+	return (actionData: ActionData) => {
+		return (
+			actionData.data.inputs &&
+			typeof actionData.readme === "string" &&
+			actionData.readme.split("\n").some((f) => f.trim() === startTag)
+		);
+	};
+}
+
+export function createTable(inputs: Inputs, entries: string[][]) {
+	const tableHeading = TableOrder.map(capitalize);
+	const sectionHeading = createHeading(inputs);
+	const table = markdownTable([tableHeading, ...entries]);
+
+	return ["", sectionHeading, table, ""];
+}
+
+export function writeActionsData(inputs: Inputs, tags: BuiltCommentTags) {
+	return async (action: ActionData) => {
+		if (!action.data.inputs) return "false";
+		if (!action.readme) {
+			throw new Error(
+				"somehow couldn't open readme. [should never happen after previous checks]",
+			);
+		}
+
+		const readmeLines = action.readme.split("\n");
+
+		const entries = Object.entries(action.data.inputs).map(
+			mapEntryToOrder(TableOrder),
+		);
+
+		const [startIndex, endIndex] = findIndices(readmeLines, tags);
+		const start = startIndex + 1;
+		const end = Math.max(0, endIndex - startIndex - 1);
+
+		readmeLines.splice(start, end, ...createTable(inputs, entries));
+
+		const newBody = readmeLines.join("\n");
+
+		if (action.readme === newBody) {
+			console.info(
+				`readme at path ${action.readmePath} is unchanged not writing changes`,
+			);
+			return "false";
+		}
+
+		await fsp.writeFile(action.readmePath, newBody);
+
+		return action.readmePath;
+	};
+}
+
 export async function updateLocalActionReadmes(inputs: Inputs) {
 	const gitRoot = await getGitRoot();
 	const actions = await getActionsPaths(gitRoot);
-	const [startTag, endTag] = buildCommentTags(inputs.comment_tag_name);
+	const tags = buildCommentTags(inputs.comment_tag_name);
 
-	const yamlActions = (
-		await Promise.all(
-			actions.map(async (actionPath) => {
-				const file = await fsp.readFile(actionPath, {
-					encoding: "utf8",
-				});
-				const data = yaml.parse(file) as ActionType;
-				const readmePath = actionPath.replace(
-					/action.y*ml/,
-					"README.md",
-				);
-				const readme =
-					fs.existsSync(readmePath) &&
-					(await fsp.readFile(readmePath, { encoding: "utf8" }));
-				return { actionPath, data, readme, readmePath };
-			}),
-		)
-	).filter(
-		(a) =>
-			a.data.inputs &&
-			typeof a.readme === "string" &&
-			a.readme.split("\n").some((f) => f.trim() === startTag),
+	const actionsData = (await Promise.all(actions.map(loadActionData))).filter(
+		isValidActionData(tags[0]),
 	);
 
-	return (
-		await Promise.all(
-			yamlActions.map(async (action) => {
-				if (!action.data.inputs) return "false";
+	const writePromises = actionsData.map(writeActionsData(inputs, tags));
 
-				const entries = Object.entries(action.data.inputs).map(
-					mapEntryToOrder(TableOrder),
-				);
-
-				if (!action.readme) {
-					throw new Error("somehow couldn't open readme");
-				}
-
-				const readmeLines = action.readme.split("\n");
-
-				const [startIndex, endIndex] = findIndices(readmeLines, [
-					startTag,
-					endTag,
-				]);
-
-				if (!endIndex) throw new Error("found unclosed comment tag");
-
-				const tableHeading = TableOrder.map(capitalize);
-				const sectionHeading = createHeading(inputs);
-				const table = markdownTable([tableHeading, ...entries]);
-				const start = startIndex + 1;
-				const end = Math.max(0, endIndex - startIndex - 1);
-
-				readmeLines.splice(start, end, "", sectionHeading, table, "");
-
-				const newBody = readmeLines.join("\n");
-
-				if (action.readme === newBody) {
-					console.info(
-						`readme at path ${action.readmePath} is unchanged not writing changes`,
-					);
-					return "false";
-				}
-
-				await fsp.writeFile(action.readmePath, newBody);
-
-				return action.readmePath;
-			}),
-		)
-	).filter((f) => f !== "false");
+	return (await Promise.all(writePromises)).filter((f) => f !== "false");
 }
 
 async function setupGit(inputs: Inputs) {
@@ -191,6 +195,12 @@ git remote set-url origin https://${inputs.gh_token}@github.com/${process.env.GI
 	await sh` git pull `;
 }
 
+async function gitAddReadmes(readmes: string[]) {
+	for (const readme of readmes) {
+		await sh` git add ${readme} `;
+	}
+}
+
 async function commitReadmes(inputs: Inputs, readmes: string[]) {
 	if (!readmes.length) return console.info("no readmes to commit");
 
@@ -200,12 +210,6 @@ async function commitReadmes(inputs: Inputs, readmes: string[]) {
 	await sh` git push `;
 
 	console.info("committed readmes");
-}
-
-async function gitAddReadmes(readmes: string[]) {
-	for (const readme of readmes) {
-		await sh` git add ${readme} `;
-	}
 }
 
 async function debugCommit(readmes: string[]) {

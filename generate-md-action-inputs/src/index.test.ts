@@ -1,15 +1,21 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Inputs } from "./index";
 
+import path from "path";
 import * as module from "./index";
 
 const mocks = vi.hoisted(() => ({
 	getInput: vi.fn(),
+	sh: vi.fn(),
 }));
 
 vi.mock("@actions/core", () => ({
 	getInput: mocks.getInput,
+}));
+
+vi.mock("zx", () => ({
+	["$"]: mocks.sh,
 }));
 
 const mockData: Inputs = {
@@ -75,12 +81,68 @@ describe("capitalize", () => {
 	});
 });
 
+describe("getGitRoot", () => {
+	const mockGitRoot = "/Users/stephansama-bot/Code/actions\n";
+
+	beforeEach(() => {
+		mocks.sh.mockReturnValue({
+			stdout: mockGitRoot,
+		});
+	});
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("runs", async () => {
+		const root = await module.getGitRoot();
+		expect(mocks.sh).toHaveBeenCalled();
+		expect(root).toBe(mockGitRoot.trim());
+	});
+});
+
+describe("getActionsPaths", () => {
+	const mockGitRoot = "/Users/stephansama-bot/Code/actions/";
+	const mockActionPaths = [
+		"./action.yaml",
+		"./do-not-track-polyfill/action.yml",
+		"./generate-md-action-inputs/action.yml",
+	].join("\n");
+
+	beforeEach(() => {
+		mocks.sh.mockReturnValue({ stdout: mockActionPaths });
+	});
+
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("resolves the proper paths for the action.y*ml(s)", async () => {
+		const root = await module.getActionsPaths(mockGitRoot);
+		const resolvedPaths = mockActionPaths
+			.split("\n")
+			.map((action) => path.resolve(mockGitRoot, action));
+		expect(mocks.sh).toHaveBeenCalled();
+		expect(root).toStrictEqual(resolvedPaths);
+	});
+});
+
 describe("loadInputs", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it("", () => {
+	it("throws an error when invalid git_provider is provided", () => {
+		mocks.getInput.mockImplementation(
+			(s: keyof typeof mockData | "verbose") => {
+				if (s === "verbose") return "true";
+				if (s === "git_provider") return "invalid_provider";
+				return mockData[s];
+			},
+		);
+		expect(() => module.loadInputs()).toThrowError();
+	});
+
+	it("loads valid inputs when supplied", () => {
 		mocks.getInput.mockImplementation(
 			(s: keyof typeof mockData | "verbose") => {
 				if (s === "verbose") return "true";
