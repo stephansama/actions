@@ -88,8 +88,6 @@ const mockActionData: module.ActionData = {
 };
 
 const mockInputData: module.Inputs = {
-	action: "stephansama",
-	base_branch: "main",
 	comment_tag_name: "ACTION-INPUT-LIST",
 	commit_message: "update",
 	committer_email: "stephansama-bot@gmail.com",
@@ -98,8 +96,6 @@ const mockInputData: module.Inputs = {
 	git_provider: "github",
 	heading: "Inputs",
 	heading_level: "3",
-	readme_path: "./README.md",
-	ref: "feature/test",
 	skip_commit: true,
 };
 
@@ -254,11 +250,11 @@ describe("run", () => {
 		mocks.readFile.mockResolvedValueOnce(mockActionYaml);
 		mocks.readFile.mockResolvedValueOnce(mockReadme);
 
+		mocks.getBooleanInput.mockReturnValueOnce(true);
+		mocks.getBooleanInput.mockReturnValueOnce(true);
+
 		mocks.getInput.mockImplementation(
-			(s: keyof typeof mockInputData | "verbose") => {
-				if (s === "verbose") return "true";
-				return mockInputData[s];
-			},
+			(s: keyof typeof mockInputData) => mockInputData[s],
 		);
 
 		await module.run();
@@ -282,11 +278,7 @@ describe("run", () => {
 		mocks.readFile.mockResolvedValueOnce(mockReadme);
 
 		mocks.getInput.mockImplementation(
-			(s: keyof typeof mockInputData | "verbose") => {
-				if (s === "verbose") return "true";
-				if (s === "skip_commit") return "false";
-				return mockInputData[s];
-			},
+			(s: keyof typeof mockInputData) => mockInputData[s],
 		);
 
 		const infoSpy = vi.spyOn(console, "info");
@@ -431,22 +423,16 @@ describe("writeActionsData", () => {
 
 describe("loadInputs", () => {
 	it("throws an error when invalid git_provider is provided", () => {
-		mocks.getInput.mockImplementation(
-			(s: keyof typeof mockInputData | "verbose") => {
-				if (s === "verbose") return "true";
-				if (s === "git_provider") return "invalid_provider";
-				return mockInputData[s];
-			},
-		);
+		mocks.getInput.mockImplementation((s: keyof typeof mockInputData) => {
+			if (s === "git_provider") return "invalid_provider";
+			return mockInputData[s];
+		});
 		expect(() => module.loadInputs()).toThrowError();
 	});
 
 	it("loads valid inputs when supplied", () => {
 		mocks.getInput.mockImplementation(
-			(s: keyof typeof mockInputData | "verbose") => {
-				if (s === "verbose") return "true";
-				return mockInputData[s];
-			},
+			(s: keyof typeof mockInputData) => mockInputData[s],
 		);
 
 		const result = module.loadInputs();
