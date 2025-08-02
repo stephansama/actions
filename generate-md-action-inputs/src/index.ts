@@ -12,9 +12,9 @@ type ActionInputOptions = {
 	required?: boolean;
 };
 
-type ActionType = { inputs?: Record<string, ActionInputOptions> };
-type GitProvider = keyof typeof GitProviders;
-type TableHeading = keyof ActionInputOptions | "name";
+export type ActionType = { inputs?: Record<string, ActionInputOptions> };
+export type GitProvider = keyof typeof GitProviders;
+export type TableHeading = keyof ActionInputOptions | "name";
 export type Inputs = ReturnType<typeof loadInputs>;
 export type ActionData = Awaited<ReturnType<typeof loadActionData>>;
 export type BuiltCommentTags = ReturnType<typeof buildCommentTags>;
@@ -33,7 +33,7 @@ const TableOrder: TableHeading[] = [
 
 if (require.main === module) run();
 
-async function run() {
+export async function run() {
 	const inputs = loadInputs();
 
 	await setupGit(inputs);
@@ -51,7 +51,7 @@ async function run() {
 
 function mapEntryToOrder(order: TableHeading[]) {
 	return ([name, value]: [string, ActionInputOptions]) =>
-		order.map((o) => (value[o as keyof typeof value] || name) + "");
+		order.map((o) => (o === "name" ? name : value[o] + ""));
 }
 
 export function createHeading(inputs: Inputs) {
@@ -115,12 +115,14 @@ export async function loadActionData(actionPath: string) {
 	return { actionPath, data, readme, readmePath };
 }
 
-export function isValidActionData(startTag: BuiltCommentTags[0]) {
+export function isValidActionData([startTag, endTag]: BuiltCommentTags) {
 	return (actionData: ActionData) => {
+		if (!actionData.readme) return false;
+		const lines = actionData.readme.split("\n");
 		return (
-			actionData.data.inputs &&
-			typeof actionData.readme === "string" &&
-			actionData.readme.split("\n").some((f) => f.trim() === startTag)
+			actionData.data?.inputs &&
+			lines.some((f) => f.trim() === startTag) &&
+			lines.some((f) => f.trim() === endTag)
 		);
 	};
 }
@@ -175,8 +177,13 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 	const tags = buildCommentTags(inputs.comment_tag_name);
 
 	const actionsData = (await Promise.all(actions.map(loadActionData))).filter(
-		isValidActionData(tags[0]),
+		isValidActionData(tags),
 	);
+
+	if (!actionsData.length) {
+		console.info("no inputs found not updating any readmes");
+		return [];
+	}
 
 	const writePromises = actionsData.map(writeActionsData(inputs, tags));
 
@@ -281,12 +288,12 @@ export function loadInputs(opts: core.InputOptions = { trimWhitespace: true }) {
 	const heading_level = core.getInput("heading_level", opts);
 	const readme_path = core.getInput("readme_path", opts);
 	const ref = core.getInput("ref", opts);
-	const verbose = JSON.parse(core.getInput("verbose", opts));
+	const verbose = JSON.parse(core.getInput("verbose", opts) || "false");
 
 	if (verbose) sh.verbose = true;
 
 	const skip_commit = JSON.parse(
-		core.getInput("skip_commit", opts),
+		core.getInput("skip_commit", opts) || "false",
 	) as boolean;
 
 	const GitProviderKeys = Object.keys(GitProviders);

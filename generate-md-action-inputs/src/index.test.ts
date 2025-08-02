@@ -3,9 +3,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as module from "./index";
 
+const md = String.raw;
+const yaml = String.raw;
+
 const mocks = vi.hoisted(() => ({
+	existsSync: vi.fn(),
 	getInput: vi.fn(),
+	readFile: vi.fn(),
+	writeFile: vi.fn(),
 	sh: vi.fn(),
+}));
+
+vi.mock("node:fs/promises", () => ({
+	readFile: mocks.readFile,
+	writeFile: mocks.writeFile,
+}));
+
+vi.mock("node:fs", () => ({
+	existsSync: mocks.existsSync,
 }));
 
 vi.mock("@actions/core", () => ({
@@ -15,22 +30,6 @@ vi.mock("@actions/core", () => ({
 vi.mock("zx", () => ({
 	["$"]: mocks.sh,
 }));
-
-const mockInputData: module.Inputs = {
-	action: "stephansama",
-	heading_level: "3",
-	heading: "Inputs",
-	git_provider: "github",
-	ref: "feature/test",
-	readme_path: "./README.md",
-	commit_message: "update",
-	skip_commit: true,
-	committer_email: "stephansama-bot@gmail.com",
-	comment_tag_name: "ACTION-INPUT-LIST",
-	committer_username: "stephansama-bot",
-	gh_token: "***",
-	base_branch: "main",
-};
 
 const mockFullReadmePaths = [
 	[
@@ -48,8 +47,154 @@ const mockFullReadmePaths = [
 	],
 ];
 
+const mockTags = module.buildCommentTags("ACTION-INPUT-LIST");
+const mockReadme = md`
+# Heading
+
+Content before
+
+- [ ] todo
+
+${mockTags.join("\n")}
+	`;
+
+// TODO: should programmatically create table instead of hard coding it
+const mockReadmeWithTable = md`
+${mockReadme.split("\n").slice(0, -2).join("\n")}
+
+### Inputs
+| Name   | Default | Description | Required |
+| ------ | ------- | ----------- | -------- |
+| action | default | description | false    |
+
+${mockTags[1]}
+`;
+
+const mockActionYaml = yaml`
+inputs:
+  action:
+    description: description
+    default: default
+    required: false
+`;
+
+const mockActionData: module.ActionData = {
+	readme: mockReadme,
+	actionPath: "/Users/stephansama-bot/Code/actions/action.yml",
+	readmePath: "/Users/stephansama-bot/Code/actions/README.md",
+	data: { inputs: {} },
+};
+
+const mockInputData: module.Inputs = {
+	action: "stephansama",
+	base_branch: "main",
+	comment_tag_name: "ACTION-INPUT-LIST",
+	commit_message: "update",
+	committer_email: "stephansama-bot@gmail.com",
+	committer_username: "stephansama-bot",
+	gh_token: "***",
+	git_provider: "github",
+	heading: "Inputs",
+	heading_level: "3",
+	readme_path: "./README.md",
+	ref: "feature/test",
+	skip_commit: true,
+};
+
 afterEach(() => {
 	vi.clearAllMocks();
+	vi.resetModules();
+});
+
+describe("isValidActionData", () => {
+	it("validates a valid readme", () => {
+		const createValid = module.isValidActionData(mockTags);
+
+		expect(createValid(mockActionData)).toBe(true);
+	});
+
+	it("invalidates an invalid readme", () => {
+		const createValid = module.isValidActionData(mockTags);
+		const readme = mockReadme.split("\n").slice(0, -2).join("\n");
+
+		expect(createValid({ ...mockActionData, readme })).toBe(false);
+	});
+});
+
+describe("updateLocalActionReadmes", () => {
+	it("updates local readmes when there are inputs", async () => {
+		mocks.sh.mockResolvedValueOnce({
+			stdout: `/Users/stephansama-bot/Code/actions/`,
+		});
+
+		mocks.sh.mockResolvedValueOnce({
+			stdout: `./action.yaml`,
+		});
+
+		mocks.existsSync.mockReturnValue(true);
+
+		mocks.readFile.mockResolvedValueOnce(mockActionYaml);
+
+		mocks.readFile.mockResolvedValueOnce(mockReadme);
+
+		await module.updateLocalActionReadmes(mockInputData);
+
+		expect(mocks.existsSync).toHaveBeenCalled();
+		expect(mocks.readFile).toHaveBeenCalled();
+		expect(mocks.sh).toHaveBeenCalled();
+	});
+
+	it("does not update readme when there are no actions", async () => {
+		mocks.sh.mockResolvedValueOnce({
+			stdout: `/Users/stephansama-bot/Code/actions/`,
+		});
+
+		mocks.sh.mockResolvedValueOnce({
+			stdout: `./action.yaml`,
+		});
+
+		mocks.existsSync.mockReturnValue(true);
+
+		mocks.readFile.mockResolvedValueOnce("");
+		mocks.readFile.mockResolvedValueOnce(mockReadme);
+
+		const infoSpy = vi.spyOn(console, "info");
+
+		await module.updateLocalActionReadmes(mockInputData);
+
+		expect(infoSpy).toHaveBeenCalledWith(
+			"no inputs found not updating any readmes",
+		);
+
+		expect(mocks.existsSync).toHaveBeenCalled();
+		expect(mocks.readFile).toHaveBeenCalled();
+		expect(mocks.sh).toHaveBeenCalled();
+	});
+
+	it("does not update readme when it is already updated", async () => {
+		const mockGitRoot = `/Users/stephansama-bot/Code/actions/`;
+		const mockActionPath = `./action.yaml`;
+
+		mocks.sh.mockResolvedValueOnce({ stdout: mockGitRoot });
+		mocks.sh.mockResolvedValueOnce({ stdout: mockActionPath });
+
+		mocks.existsSync.mockReturnValue(true);
+
+		mocks.readFile.mockResolvedValueOnce(mockActionYaml);
+		mocks.readFile.mockResolvedValueOnce(mockReadmeWithTable);
+
+		const infoSpy = vi.spyOn(console, "info");
+
+		await module.updateLocalActionReadmes(mockInputData);
+
+		expect(infoSpy).toHaveBeenCalledWith(
+			`readme at path ${path.resolve(mockGitRoot, mockActionPath)} is unchanged not writing changes`,
+		);
+
+		expect(mocks.existsSync).toHaveBeenCalled();
+		expect(mocks.readFile).toHaveBeenCalled();
+		expect(mocks.sh).toHaveBeenCalled();
+	});
 });
 
 describe("buildCommentTags", () => {
@@ -90,6 +235,67 @@ describe("createHeading", () => {
 	);
 });
 
+describe("run", () => {
+	it("loads the run function with debug flag", async () => {
+		mocks.sh.mockResolvedValueOnce({});
+		mocks.sh.mockResolvedValueOnce({});
+		mocks.sh.mockResolvedValueOnce({});
+		mocks.sh.mockResolvedValueOnce({});
+		mocks.sh.mockResolvedValueOnce({});
+		mocks.sh.mockResolvedValueOnce({
+			stdout: `/Users/stephansama-bot/Code/actions/`,
+		});
+		mocks.sh.mockResolvedValueOnce({
+			stdout: `./action.yaml`,
+		});
+
+		mocks.readFile.mockResolvedValueOnce(mockActionYaml);
+		mocks.readFile.mockResolvedValueOnce(mockReadme);
+
+		mocks.getInput.mockImplementation(
+			(s: keyof typeof mockInputData | "verbose") => {
+				if (s === "verbose") return "true";
+				return mockInputData[s];
+			},
+		);
+
+		await module.run();
+		expect(mocks.sh).toHaveBeenCalled();
+	});
+
+	it("loads the run function and commits the readmes", async () => {
+		mocks.sh.mockResolvedValueOnce({});
+		mocks.sh.mockResolvedValueOnce({});
+		mocks.sh.mockResolvedValueOnce({});
+		mocks.sh.mockResolvedValueOnce({});
+		mocks.sh.mockResolvedValueOnce({});
+		mocks.sh.mockResolvedValueOnce({
+			stdout: `/Users/stephansama-bot/Code/actions/`,
+		});
+		mocks.sh.mockResolvedValueOnce({
+			stdout: `./action.yaml`,
+		});
+
+		mocks.readFile.mockResolvedValueOnce(mockActionYaml);
+		mocks.readFile.mockResolvedValueOnce(mockReadme);
+
+		mocks.getInput.mockImplementation(
+			(s: keyof typeof mockInputData | "verbose") => {
+				if (s === "verbose") return "true";
+				if (s === "skip_commit") return "false";
+				return mockInputData[s];
+			},
+		);
+
+		const infoSpy = vi.spyOn(console, "info");
+
+		await module.run();
+
+		expect(infoSpy).toHaveBeenCalled();
+		expect(mocks.sh).toHaveBeenCalled();
+	});
+});
+
 describe("capitalize", () => {
 	it.each([
 		["", ""],
@@ -100,12 +306,10 @@ describe("capitalize", () => {
 });
 
 describe("getGitRoot", () => {
-	const mockGitRoot = "/Users/stephansama-bot/Code/actions\n";
+	const mockGitRoot = "/Users/stephansama-bot/Code/actions/\n";
 
 	beforeEach(() => {
-		mocks.sh.mockReturnValue({
-			stdout: mockGitRoot,
-		});
+		mocks.sh.mockReturnValue({ stdout: mockGitRoot });
 	});
 
 	it("runs", async () => {
@@ -163,33 +367,24 @@ describe("setupGit", () => {
 });
 
 describe("findIndices", () => {
-	const tags = module.buildCommentTags("ACTION-INPUT-LIST");
-	const md = String.raw;
-	const mockReadme = md`
-# Heading
-
-Content before
-
-- [ ] todo
-
-${tags.join("\n")}
-	`;
-
 	it("throws an error when there is no end comment", () => {
 		expect(() =>
-			module.findIndices(mockReadme.split("\n").slice(0, -2), tags),
+			module.findIndices(mockReadme.split("\n").slice(0, -2), mockTags),
 		).toThrowError();
 	});
 
 	it("finds the start and end indices", () => {
-		const [start, end] = module.findIndices(mockReadme.split("\n"), tags);
+		const [start, end] = module.findIndices(
+			mockReadme.split("\n"),
+			mockTags,
+		);
 		expect(start).toBe(7);
 		expect(end).toBe(8);
 	});
 
 	it("finds the last start and end indices when there are multiple", () => {
-		const mockLines = (mockReadme + "\n" + tags.join("\n")).split("\n");
-		const [start, end] = module.findIndices(mockLines, tags);
+		const mockLines = (mockReadme + "\n" + mockTags.join("\n")).split("\n");
+		const [start, end] = module.findIndices(mockLines, mockTags);
 		expect(start).toBe(10);
 		expect(end).toBe(11);
 	});
@@ -214,6 +409,21 @@ describe("getActionsPaths", () => {
 			.map((action) => path.resolve(mockGitRoot, action));
 		expect(mocks.sh).toHaveBeenCalled();
 		expect(root).toStrictEqual(resolvedPaths);
+	});
+});
+
+describe("writeActionsData", () => {
+	it("returns false when there are no inputs", async () => {
+		const writeCb = module.writeActionsData(mockInputData, mockTags);
+		const result = await writeCb({ ...mockActionData, data: {} });
+		expect(result).toBe("false");
+	});
+
+	it("throws an error when there is no readme to update", async () => {
+		const writeCb = module.writeActionsData(mockInputData, mockTags);
+		expect(
+			async () => await writeCb({ ...mockActionData, readme: "" }),
+		).rejects.toThrow();
 	});
 });
 
