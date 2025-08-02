@@ -9,6 +9,9 @@ on:
   workflow_dispatch:
 env:
   HUSKY: 0
+permissions:
+  actions: write
+  contents: write
 jobs:
   preview:
     runs-on: ubuntu-latest
