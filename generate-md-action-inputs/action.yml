@@ -35,7 +35,7 @@ inputs:
     description: Prefix for delimiting block start and end
     required: false
   heading:
-    default: Inputs
+    default: ⚙️ Inputs
     description: Heading for table
     required: false
   heading_level:

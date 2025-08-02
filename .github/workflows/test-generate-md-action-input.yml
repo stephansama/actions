@@ -30,7 +30,6 @@ jobs:
       - name: 🏗️ Build all actions
         run: pnpm run build
       - uses: ./generate-md-action-inputs
-      - run: node ./scripts/verify-do-not-track.js
   release:
     runs-on: ubuntu-latest
     if: ${{github.event.workflow_run.conclusion == 'success'}}
@@ -42,4 +41,5 @@ jobs:
           cache: "pnpm"
           node-version-file: ".nvmrc"
       - uses: stephansama/actions/generate-md-action-inputs@v1
-      - run: node ./scripts/verify-do-not-track.js
+        with:
+          skip_commit: true

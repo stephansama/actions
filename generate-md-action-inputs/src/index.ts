@@ -125,6 +125,10 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 					(f) => f.trim() === endCommentTag,
 				);
 
+				if (!endIndex) {
+					throw new Error("found unclosed comment tag");
+				}
+
 				const heading = createHeading(inputs);
 				const table = markdownTable([tableHeading, ...entries]);
 
@@ -159,7 +163,7 @@ git remote set-url origin https://${inputs.gh_token}@github.com/${process.env.GI
 	}
 
 	await sh` git config pull.rebase true `;
-	await sh` git pull origin ${inputs.ref || inputs.base_branch} `;
+	await sh` git pull `;
 }
 
 async function commitReadmes(inputs: Inputs, readmes: string[]) {
