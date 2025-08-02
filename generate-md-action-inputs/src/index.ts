@@ -167,6 +167,8 @@ git remote set-url origin https://${inputs.gh_token}@github.com/${process.env.GI
 }
 
 async function commitReadmes(inputs: Inputs, readmes: string[]) {
+	if (!readmes.length) console.info("no readmes to commit");
+
 	await gitAddReadmes(readmes);
 
 	await sh` git commit -m ${inputs.commit_message} `;
