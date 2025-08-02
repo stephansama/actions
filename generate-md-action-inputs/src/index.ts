@@ -84,8 +84,8 @@ export function findIndices(
 	lines: string[],
 	[startTag, endTag]: ReturnType<typeof buildCommentTags>,
 ) {
-	const startIndex = lines.findIndex((f) => f.trim() === startTag);
-	const endIndex = lines.findIndex((f) => f.trim() === endTag);
+	const startIndex = lines.lastIndexOf(startTag);
+	const endIndex = lines.lastIndexOf(endTag);
 
 	if (!startIndex || !endIndex) {
 		throw new Error("not able to find start or end comment index");
