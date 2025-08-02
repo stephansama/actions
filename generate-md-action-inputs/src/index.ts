@@ -14,10 +14,10 @@ type ActionInputOptions = {
 	required?: boolean;
 };
 
-type ActionType = { inputs?: Record<string, ActionInputOptions> };
-type TableHeading = keyof ActionInputOptions | "name";
-type GitProvider = keyof typeof GitProviders;
-type Inputs = ReturnType<typeof loadInputs>;
+export type ActionType = { inputs?: Record<string, ActionInputOptions> };
+export type TableHeading = keyof ActionInputOptions | "name";
+export type GitProvider = keyof typeof GitProviders;
+export type Inputs = ReturnType<typeof loadInputs>;
 
 const GitProviders = {
 	github: "https://github.com",
@@ -43,8 +43,12 @@ async function run() {
 	}
 }
 
-function createHeading(inputs: Inputs) {
-	const length = parseInt(inputs.heading_level) || 3;
+export function createHeading(inputs: Inputs) {
+	const [min, max] = [1, 6];
+	const length = Math.min(
+		Math.max(parseInt(inputs.heading_level) || 3, min),
+		max,
+	);
 	const headingLevel = Array.from({ length }, () => "#").join("");
 	return `${headingLevel} ${inputs.heading}`;
 }
@@ -55,7 +59,7 @@ async function getGitRoot() {
 
 async function getActionsPaths(gitRoot: string) {
 	const { stdout } = await sh`
-cd ${gitRoot} 
+cd ${gitRoot}
 find . -type f -name 'action.y*ml'
 `;
 	return stdout
@@ -199,6 +203,10 @@ async function gitAddReadmes(readmes: string[]) {
 
 async function debugCommit(readmes: string[]) {
 	await gitAddReadmes(readmes);
+
+	for (const readme of readmes) {
+		await sh`git diff ${readme}`;
+	}
 
 	await sh` git status `;
 }
