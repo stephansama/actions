@@ -228,53 +228,6 @@ export async function debugCommit(readmes: string[]) {
 	await sh` git status `;
 }
 
-export async function loadRemoteActionFile(inputs: Inputs) {
-	const actionPath = inputs.action.split("/");
-	const repo = actionPath.slice(0, 2).join("/");
-	const url = [GitProviders[inputs.git_provider], repo].join("/");
-
-	const branch = inputs.ref || inputs.base_branch;
-
-	const tmpBaseDir = "./tmp";
-
-	await sh`
-rm -rf ${tmpBaseDir}
-git init ${tmpBaseDir} 
-cd ${tmpBaseDir}
-
-git remote add origin ${url}
-git config core.sparseCheckout true
-
-echo "action.y*ml" > .git/info/sparse-checkout
-
-git fetch origin ${branch}
-git checkout ${branch}
-	`;
-
-	const joined = path.join(tmpBaseDir, actionPath.slice(3).join("/"));
-
-	const dir = await fsp.readdir(joined);
-	const filename = dir.find(
-		(file) => file.startsWith("action.y") && file.endsWith("ml"),
-	);
-
-	if (!filename) {
-		throw new Error("not able to find action.y*ml file");
-	}
-
-	const filepath = path.join(joined, filename);
-	const file = await fsp.readFile(filepath, { encoding: "utf8" });
-	const parsed = yaml.parse(file) as ActionType;
-
-	if (!parsed.inputs) {
-		throw new Error(
-			`the requested action at ${inputs.action} does not have any inputs`,
-		);
-	}
-
-	return parsed;
-}
-
 export function loadInputs(opts: core.InputOptions = { trimWhitespace: true }) {
 	const action = core.getInput("action", { ...opts, required: true });
 	const base_branch = core.getInput("base_branch", opts);
