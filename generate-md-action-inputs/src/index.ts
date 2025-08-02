@@ -6,6 +6,8 @@ import * as path from "node:path";
 import * as yaml from "yaml";
 import { $ as sh } from "zx";
 
+sh.verbose = true;
+
 type Inputs = ReturnType<typeof loadInputs>;
 
 type ActionInputOptions = {
@@ -27,11 +29,11 @@ if (require.main === module) run();
 
 async function run() {
 	const inputs = loadInputs();
-	const actions = await updateLocalActionFiles(inputs);
+	const readmes = await updateLocalActionReadmes(inputs);
 	if (inputs.skip_commit) {
-		await debugCommit(inputs, actions);
+		await debugCommit(inputs, readmes);
 	} else {
-		// await loadActionFile(inputs);
+		await commitReadmes(inputs, readmes);
 	}
 }
 
@@ -59,9 +61,8 @@ function buildCommentTag(tagName: string, position: "START" | "END" = "START") {
 	return `<!-- ${tagName}:${position} -->` as const;
 }
 
-export async function updateLocalActionFiles(inputs: Inputs) {
+export async function updateLocalActionReadmes(inputs: Inputs) {
 	const gitRoot = await getGitRoot();
-
 	const actions = await getActionsPaths(gitRoot);
 	const startCommentTag = buildCommentTag(inputs.comment_tag_name);
 
@@ -94,7 +95,7 @@ export async function updateLocalActionFiles(inputs: Inputs) {
 	return (
 		await Promise.all(
 			yamlActions.map(async (action) => {
-				if (!action.data.inputs) return false;
+				if (!action.data.inputs) return "false";
 
 				const entries = Object.entries(action.data.inputs).map(
 					([name, value]) => [
@@ -140,12 +141,29 @@ git remote set-url origin https://${inputs.gh_token}@github.com/${process.env.GI
 	}
 }
 
-async function debugCommit(inputs: Inputs, actions: string[]) {
+async function commitReadmes(inputs: Inputs, readmes: string[]) {
 	await setupGit(inputs);
-	await sh`
-git add ${actions.join(" ")}
-git status
-`;
+
+	await gitAddReadmes(readmes);
+
+	await sh` git commit -m ${inputs.commit_message} `;
+	await sh` git push `;
+
+	console.info("committed readmes");
+}
+
+async function gitAddReadmes(readmes: string[]) {
+	for (const readme of readmes) {
+		await sh` git add ${readme} `;
+	}
+}
+
+async function debugCommit(inputs: Inputs, readmes: string[]) {
+	await setupGit(inputs);
+
+	await gitAddReadmes(readmes);
+
+	await sh` git status `;
 }
 
 export async function loadRemoteActionFile(inputs: Inputs) {
@@ -205,7 +223,7 @@ export function loadInputs() {
 			heading: "⚙️ Inputs",
 			heading_level: "3",
 			readme_path: "./README.md",
-			skip_commit: JSON.parse("false") as boolean,
+			skip_commit: JSON.parse("true") as boolean,
 			git_provider: "github" as GitProvider,
 			comment_tag_name: "ACTION-INPUT-LIST",
 		};
