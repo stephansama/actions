@@ -8,8 +8,6 @@ import { $ as sh } from "zx";
 
 sh.verbose = true;
 
-type Inputs = ReturnType<typeof loadInputs>;
-
 type ActionInputOptions = {
 	default?: string;
 	description?: string;
@@ -17,29 +15,38 @@ type ActionInputOptions = {
 };
 
 type ActionType = { inputs?: Record<string, ActionInputOptions> };
-
+type TableHeading = keyof ActionInputOptions | "name";
 type GitProvider = keyof typeof GitProviders;
+type Inputs = ReturnType<typeof loadInputs>;
 
 const GitProviders = {
 	github: "https://github.com",
-	gitlab: "",
+	gitlab: "https://gitlab.com",
 };
+
+const tableHeading = (
+	["name", "default", "description", "required"] as TableHeading[]
+).map(capitalize);
 
 if (require.main === module) run();
 
 async function run() {
 	const inputs = loadInputs();
+
 	await setupGit(inputs);
+
 	const readmes = await updateLocalActionReadmes(inputs);
 	if (inputs.skip_commit) {
-		await debugCommit(inputs, readmes);
+		await debugCommit(readmes);
 	} else {
 		await commitReadmes(inputs, readmes);
 	}
 }
 
 function createHeading(inputs: Inputs) {
-	return `${Array.from({ length: parseInt(inputs.heading_level) }, () => "#").join("")} ${inputs.heading}`;
+	const length = parseInt(inputs.heading_level) || 3;
+	const headingLevel = Array.from({ length }, () => "#").join("");
+	return `${headingLevel} ${inputs.heading}`;
 }
 
 async function getGitRoot() {
@@ -47,22 +54,35 @@ async function getGitRoot() {
 }
 
 async function getActionsPaths(gitRoot: string) {
-	return (
-		await sh`
-cd ${gitRoot}
+	const { stdout } = await sh`
+cd ${gitRoot} 
 find . -type f -name 'action.y*ml'
-`
-	).stdout
+`;
+	return stdout
 		.split("\n")
 		.filter(Boolean)
 		.map((p) => path.resolve(gitRoot, p));
 }
 
-function buildCommentTags(tagName: string) {
+export function buildCommentTags(tagName: string) {
 	return [
 		`<!-- ${tagName}:START -->` as const,
 		`<!-- ${tagName}:END -->` as const,
 	] as const;
+}
+
+export function findIndices(
+	lines: string[],
+	[startTag, endTag]: ReturnType<typeof buildCommentTags>,
+) {
+	const startIndex = lines.findIndex((f) => f.trim() === startTag);
+	const endIndex = lines.findIndex((f) => f.trim() === endTag);
+
+	if (!startIndex || !endIndex) {
+		throw new Error("not able to find start or end comment index");
+	}
+
+	return [startIndex, endIndex];
 }
 
 export async function updateLocalActionReadmes(inputs: Inputs) {
@@ -94,8 +114,6 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 			a.readme.split("\n").some((f) => f.trim() === startTag),
 	);
 
-	const tableHeading = ["Name", "Default", "Description", "Required"];
-
 	return (
 		await Promise.all(
 			yamlActions.map(async (action) => {
@@ -110,18 +128,16 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 					],
 				);
 
-				if (!action.readme)
+				if (!action.readme) {
 					throw new Error("somehow couldn't open readme");
+				}
 
 				const readmeLines = action.readme.split("\n");
 
-				const startIndex = readmeLines.findIndex(
-					(f) => f.trim() === startTag,
-				);
-
-				const endIndex = readmeLines.findIndex(
-					(f) => f.trim() === endTag,
-				);
+				const [startIndex, endIndex] = findIndices(readmeLines, [
+					startTag,
+					endTag,
+				]);
 
 				if (!endIndex) throw new Error("found unclosed comment tag");
 
@@ -150,10 +166,8 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 }
 
 async function setupGit(inputs: Inputs) {
-	await sh`
-git config --global user.email ${inputs.committer_email}
-git config --global user.name ${inputs.committer_username}
-`;
+	await sh` git config --global user.email ${inputs.committer_email} `;
+	await sh` git config --global user.name ${inputs.committer_username} `;
 
 	if (inputs.gh_token) {
 		console.info("setting gh token");
@@ -183,7 +197,7 @@ async function gitAddReadmes(readmes: string[]) {
 	}
 }
 
-async function debugCommit(inputs: Inputs, readmes: string[]) {
+async function debugCommit(readmes: string[]) {
 	await gitAddReadmes(readmes);
 
 	await sh` git status `;
@@ -236,63 +250,23 @@ git checkout ${branch}
 	return parsed;
 }
 
-export function loadInputs() {
-	if (process.env.LOGNAME === "stephanrandle") {
-		return {
-			// action: "stephansama/actions/generate-md-action-inputs",
-			// ref: "feature/generate-md-action-input",
-			action: "remix-run/release-comment-action",
-			base_branch: "main",
-			heading: "⚙️ Inputs",
-			heading_level: "3",
-			readme_path: "./README.md",
-			skip_commit: JSON.parse("true") as boolean,
-			git_provider: "github" as GitProvider,
-			comment_tag_name: "ACTION-INPUT-LIST",
-		};
-	}
-
-	const action = core.getInput("action", {
-		trimWhitespace: true,
-		required: true,
-	});
-
-	const base_branch = core.getInput("base_branch", { trimWhitespace: true });
-
-	const heading = core.getInput("heading", { trimWhitespace: true });
-	const heading_level = core.getInput("heading_level", {
-		trimWhitespace: true,
-	});
-	const commit_message = core.getInput("commit_message", {
-		trimWhitespace: true,
-	});
-
-	const committer_username = core.getInput("committer_username", {
-		trimWhitespace: true,
-	});
-	const committer_email = core.getInput("committer_email", {
-		trimWhitespace: true,
-	});
-
-	const ref = core.getInput("ref", { trimWhitespace: true });
-
-	const gh_token = core.getInput("gh_token", { trimWhitespace: true });
-
-	const comment_tag_name = core.getInput("comment_tag_name", {
-		trimWhitespace: true,
-	});
+export function loadInputs(opts: core.InputOptions = { trimWhitespace: true }) {
+	const action = core.getInput("action", { ...opts, required: true });
+	const base_branch = core.getInput("base_branch", opts);
+	const comment_tag_name = core.getInput("comment_tag_name", opts);
+	const commit_message = core.getInput("commit_message", opts);
+	const committer_email = core.getInput("committer_email", opts);
+	const committer_username = core.getInput("committer_username", opts);
+	const gh_token = core.getInput("gh_token", opts);
+	const git_provider = core.getInput("git_provider", opts);
+	const heading = core.getInput("heading", opts);
+	const heading_level = core.getInput("heading_level", opts);
+	const readme_path = core.getInput("readme_path", opts);
+	const ref = core.getInput("ref", opts);
 
 	const skip_commit = JSON.parse(
-		core.getInput("skip_commit", {
-			trimWhitespace: true,
-		}),
+		core.getInput("skip_commit", opts),
 	) as boolean;
-
-	const git_provider = core.getInput("git_provider", {
-		trimWhitespace: true,
-	});
-
-	const readme_path = core.getInput("readme_path", { trimWhitespace: true });
 
 	const GitProviderKeys = Object.keys(GitProviders);
 	if (!GitProviderKeys.includes(git_provider)) {
@@ -316,4 +290,8 @@ export function loadInputs() {
 		ref,
 		skip_commit,
 	};
+}
+
+function capitalize(word: string) {
+	return word.at(0)?.toUpperCase() + word.slice(1);
 }

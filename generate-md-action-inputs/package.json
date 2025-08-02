@@ -3,6 +3,7 @@
 	"scripts": {
 		"build": "tsup ./src/index.ts"
 	},
+	"main": "./src/index.ts",
 	"devDependencies": {
 		"markdown-table": "^3.0.4",
 		"yaml": "^2.8.0",
