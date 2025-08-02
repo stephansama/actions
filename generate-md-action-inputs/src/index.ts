@@ -22,17 +22,6 @@ const GitProviders = {
 	gitlab: "https://gitlab.com",
 };
 
-function createTableHeading() {
-	const order: TableHeading[] = [
-		"name",
-		"default",
-		"description",
-		"required",
-	];
-
-	return order.map(capitalize);
-}
-
 if (require.main === module) run();
 
 async function run() {
@@ -46,6 +35,18 @@ async function run() {
 	} else {
 		await commitReadmes(inputs, readmes);
 	}
+}
+
+const TableOrder: TableHeading[] = [
+	"name",
+	"default",
+	"description",
+	"required",
+];
+
+function mapEntryToOrder(order: TableHeading[]) {
+	return ([name, value]: [string, ActionInputOptions]) =>
+		order.map((o) => (value[o as keyof typeof value] || name) + "");
 }
 
 export function createHeading(inputs: Inputs) {
@@ -74,9 +75,14 @@ find . -type f -name 'action.y*ml'
 }
 
 export function buildCommentTags(tagName: string) {
+	if (!tagName) {
+		throw new Error("not able to build comment tag based on tagName");
+	}
+
+	const name = tagName.replace(/\s+/g, "-").toUpperCase();
 	return [
-		`<!-- ${tagName}:START -->` as const,
-		`<!-- ${tagName}:END -->` as const,
+		`<!-- ${name}:START -->` as const,
+		`<!-- ${name}:END -->` as const,
 	] as const;
 }
 
@@ -129,12 +135,7 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 				if (!action.data.inputs) return "false";
 
 				const entries = Object.entries(action.data.inputs).map(
-					([name, value]) => [
-						name,
-						value.default || "",
-						value.description || "",
-						(value.required || false) + "",
-					],
+					mapEntryToOrder(TableOrder),
 				);
 
 				if (!action.readme) {
@@ -150,7 +151,7 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 
 				if (!endIndex) throw new Error("found unclosed comment tag");
 
-				const tableHeading = createTableHeading();
+				const tableHeading = TableOrder.map(capitalize);
 				const sectionHeading = createHeading(inputs);
 				const table = markdownTable([tableHeading, ...entries]);
 				const start = startIndex + 1;
@@ -309,6 +310,6 @@ export function loadInputs(opts: core.InputOptions = { trimWhitespace: true }) {
 	};
 }
 
-function capitalize(word: string) {
-	return word.at(0)?.toUpperCase() + word.slice(1);
+export function capitalize(word: string) {
+	return word.length > 1 ? word.at(0)?.toUpperCase() + word.slice(1) : word;
 }
