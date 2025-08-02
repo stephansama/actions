@@ -28,8 +28,8 @@ const GitProviders = {
 if (require.main === module) run();
 
 async function run() {
-	await pullGit();
 	const inputs = loadInputs();
+	await setupGit(inputs);
 	const readmes = await updateLocalActionReadmes(inputs);
 	if (inputs.skip_commit) {
 		await debugCommit(inputs, readmes);
@@ -145,11 +145,6 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 	).filter((f) => f !== "false");
 }
 
-async function pullGit() {
-	await sh` git config pull.rebase true `;
-	await sh` git pull `;
-}
-
 async function setupGit(inputs: Inputs) {
 	await sh`
 git config --global user.email ${inputs.committer_email}
@@ -161,11 +156,12 @@ git config --global user.name ${inputs.committer_username}
 git remote set-url origin https://${inputs.gh_token}@github.com/${process.env.GITHUB_REPOSITORY}.git
 `;
 	}
+
+	await sh` git config pull.rebase true `;
+	await sh` git pull origin ${inputs.ref || inputs.base_branch} `;
 }
 
 async function commitReadmes(inputs: Inputs, readmes: string[]) {
-	await setupGit(inputs);
-
 	await gitAddReadmes(readmes);
 
 	await sh` git commit -m ${inputs.commit_message} `;
@@ -181,8 +177,6 @@ async function gitAddReadmes(readmes: string[]) {
 }
 
 async function debugCommit(inputs: Inputs, readmes: string[]) {
-	await setupGit(inputs);
-
 	await gitAddReadmes(readmes);
 
 	await sh` git status `;
