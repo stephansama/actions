@@ -68,9 +68,7 @@ function buildCommentTags(tagName: string) {
 export async function updateLocalActionReadmes(inputs: Inputs) {
 	const gitRoot = await getGitRoot();
 	const actions = await getActionsPaths(gitRoot);
-	const [startCommentTag, endCommentTag] = buildCommentTags(
-		inputs.comment_tag_name,
-	);
+	const [startTag, endTag] = buildCommentTags(inputs.comment_tag_name);
 
 	const yamlActions = (
 		await Promise.all(
@@ -93,7 +91,7 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 		(a) =>
 			a.data.inputs &&
 			typeof a.readme === "string" &&
-			a.readme.split("\n").some((f) => f.trim() === startCommentTag),
+			a.readme.split("\n").some((f) => f.trim() === startTag),
 	);
 
 	const tableHeading = ["Name", "Default", "Description", "Required"];
@@ -118,28 +116,21 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 				const readmeLines = action.readme.split("\n");
 
 				const startIndex = readmeLines.findIndex(
-					(f) => f.trim() === startCommentTag,
+					(f) => f.trim() === startTag,
 				);
 
 				const endIndex = readmeLines.findIndex(
-					(f) => f.trim() === endCommentTag,
+					(f) => f.trim() === endTag,
 				);
 
-				if (!endIndex) {
-					throw new Error("found unclosed comment tag");
-				}
+				if (!endIndex) throw new Error("found unclosed comment tag");
 
 				const heading = createHeading(inputs);
 				const table = markdownTable([tableHeading, ...entries]);
+				const start = startIndex + 1;
+				const end = Math.max(0, endIndex - startIndex - 1);
 
-				readmeLines.splice(
-					startIndex + 1,
-					Math.max(0, endIndex - startIndex - 1),
-					"",
-					heading,
-					table,
-					"",
-				);
+				readmeLines.splice(start, end, "", heading, table, "");
 
 				await fsp.writeFile(action.readmePath, readmeLines.join("\n"));
 
