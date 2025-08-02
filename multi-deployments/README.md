@@ -57,13 +57,8 @@ jobs:
                   environments: ${{steps.generate.outputs.environments}}
 ```
 
-### **Inputs**
-
-| Name                | Description                                                                                                                                                                           | Required | Default |
-| :------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------- | :------ |
-| environments        | A JSON string containing key-value pairs where keys are the environment names (e.g., "staging", "production", "preview-branch-xyz") and values are the corresponding deployment URLs. | true     |         |
-| invalidate_previous | Set to true to invalidate (mark as inactive) any previous deployments for the specified environments before creating new ones.                                                        | false    | "false" |
-| ref                 | The commit reference (e.g., branch name, SHA) to associate with the deployment. If not provided, it automatically uses GITHUB_HEAD_REF or GITHUB_REF from the CI environment.         | false    | ""      |
+<!-- ACTION-INPUT-LIST:START -->
+<!-- ACTION-INPUT-LIST:END -->
 
 ### **Example environments JSON**
 

@@ -3,6 +3,7 @@ on:
   push:
     branches: [main]
     paths:
+      - "**/action.yml"
       - "**.ts"
       - "!**.spec.ts"
       - "!**.test.ts"
@@ -29,5 +30,6 @@ jobs:
         run: pnpm install
       - name: 🏗️ Build all actions
         run: pnpm run build
+      - uses: stephansama/actions/generate-md-action-inputs@v1
       - name: 🚀 Release actions
         uses: int128/release-typescript-action@v1
