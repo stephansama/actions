@@ -54,6 +54,10 @@ inputs:
     default: "false"
     description: "Skips committing the changes to repo"
     required: false
+  verbose:
+    description: "Whether or not to enable verbose logging for shell scripts"
+    default: "false"
+    required: false
 runs:
   using: node20
   main: ./dist/index.js

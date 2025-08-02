@@ -6,8 +6,6 @@ import * as path from "node:path";
 import * as yaml from "yaml";
 import { $ as sh } from "zx";
 
-sh.verbose = true;
-
 type ActionInputOptions = {
 	default?: string;
 	description?: string;
@@ -24,9 +22,16 @@ const GitProviders = {
 	gitlab: "https://gitlab.com",
 };
 
-const tableHeading = (
-	["name", "default", "description", "required"] as TableHeading[]
-).map(capitalize);
+function createTableHeading() {
+	const order: TableHeading[] = [
+		"name",
+		"default",
+		"description",
+		"required",
+	];
+
+	return order.map(capitalize);
+}
 
 if (require.main === module) run();
 
@@ -145,12 +150,13 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 
 				if (!endIndex) throw new Error("found unclosed comment tag");
 
-				const heading = createHeading(inputs);
+				const tableHeading = createTableHeading();
+				const sectionHeading = createHeading(inputs);
 				const table = markdownTable([tableHeading, ...entries]);
 				const start = startIndex + 1;
 				const end = Math.max(0, endIndex - startIndex - 1);
 
-				readmeLines.splice(start, end, "", heading, table, "");
+				readmeLines.splice(start, end, "", sectionHeading, table, "");
 
 				const newBody = readmeLines.join("\n");
 
@@ -205,7 +211,7 @@ async function debugCommit(readmes: string[]) {
 	await gitAddReadmes(readmes);
 
 	for (const readme of readmes) {
-		await sh`git diff ${readme}`;
+		await sh`cat ${readme}`;
 	}
 
 	await sh` git status `;
@@ -271,6 +277,9 @@ export function loadInputs(opts: core.InputOptions = { trimWhitespace: true }) {
 	const heading_level = core.getInput("heading_level", opts);
 	const readme_path = core.getInput("readme_path", opts);
 	const ref = core.getInput("ref", opts);
+	const verbose = JSON.parse(core.getInput("verbose", opts));
+
+	if (verbose) sh.verbose = true;
 
 	const skip_commit = JSON.parse(
 		core.getInput("skip_commit", opts),
