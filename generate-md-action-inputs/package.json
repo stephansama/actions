@@ -4,8 +4,8 @@
 		"build": "tsup ./src/index.ts"
 	},
 	"devDependencies": {
-		"@types/degit": "^2.8.6",
-		"degit": "^2.8.4",
-		"yaml": "^2.8.0"
+		"markdown-table": "^3.0.4",
+		"yaml": "^2.8.0",
+		"zx": "^8.7.2"
 	}
 }

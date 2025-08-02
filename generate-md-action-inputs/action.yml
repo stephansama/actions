@@ -3,18 +3,56 @@ author: Stephan Randle
 description: Generate markdown table containing inputs from github action configuration
 inputs:
   action:
+    default: ${{github.repository}}
     description: Github Action to parse the action.yml file from
+    required: true
+  base_branch:
+    default: main
+    description: Base branch for main commits
     required: true
   comment_tag_name:
     default: ACTION-INPUT-LIST
     description: Prefix for delimiting block start and end
     required: false
-  readme_path:
-    description: Path to the readme file to edit
-    default: ./README.md
+  commit_message:
+    default: "Updated readme with the latest action inputs"
+    description: "Commit message used while committing to the repo"
+    required: false
+  committer_username:
+    default: "stephansama-bot"
+    description: "Username used while committing to the repo"
+    required: false
+  committer_email:
+    description: "Email id used while committing to the repo"
+    default: "stephansama-bot@example.com"
     required: false
   gh_token:
+    default: ${{github.token}}
     description: Github token scoped to current repo (need to have an environment variable set if not supplied)
+    required: false
+  git_provider:
+    default: github
+    description: Prefix for delimiting block start and end
+    required: false
+  heading:
+    default: Inputs
+    description: Heading for table
+    required: false
+  heading_level:
+    default: "3"
+    description: Heading level for table
+    required: false
+  readme_path:
+    default: ./README.md
+    description: Path to the readme file to edit
+    required: false
+  ref:
+    default: ${{github.head_ref}}
+    description: Pull request head ref to match against
+    required: false
+  skip_commit:
+    default: "false"
+    description: "Skips committing the changes to repo"
     required: false
 runs:
   using: node20
