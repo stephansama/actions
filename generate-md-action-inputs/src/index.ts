@@ -132,7 +132,16 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 
 				readmeLines.splice(start, end, "", heading, table, "");
 
-				await fsp.writeFile(action.readmePath, readmeLines.join("\n"));
+				const newBody = readmeLines.join("\n");
+
+				if (action.readme === newBody) {
+					console.info(
+						`readme at path ${action.readmePath} is unchanged not writing changes`,
+					);
+					return "false";
+				}
+
+				await fsp.writeFile(action.readmePath, newBody);
 
 				return action.readmePath;
 			}),
