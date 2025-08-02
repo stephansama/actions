@@ -39,6 +39,9 @@ async function run() {
 	await setupGit(inputs);
 
 	const readmes = await updateLocalActionReadmes(inputs);
+
+	await gitAddReadmes(readmes);
+
 	if (inputs.skip_commit) {
 		await debugCommit(readmes);
 	} else {
@@ -91,11 +94,11 @@ export function buildCommentTags(tagName: string) {
 export function findIndices(
 	lines: string[],
 	[startTag, endTag]: BuiltCommentTags,
-) {
+): [number, number] {
 	const startIndex = lines.lastIndexOf(startTag);
 	const endIndex = lines.lastIndexOf(endTag);
 
-	if (!startIndex || !endIndex) {
+	if (startIndex === -1 || endIndex === -1) {
 		throw new Error("not able to find start or end comment index");
 	}
 
@@ -180,42 +183,38 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 	return (await Promise.all(writePromises)).filter((f) => f !== "false");
 }
 
-async function setupGit(inputs: Inputs) {
+export async function setupGit(inputs: Inputs) {
 	await sh` git config --global user.email ${inputs.committer_email} `;
 	await sh` git config --global user.name ${inputs.committer_username} `;
 
 	if (inputs.gh_token) {
 		console.info("setting gh token");
-		await sh`
-git remote set-url origin https://${inputs.gh_token}@github.com/${process.env.GITHUB_REPOSITORY}.git
-`;
+		const origin = `https://${inputs.gh_token}@github.com/${process.env.GITHUB_REPOSITORY}.git`;
+		await sh` git remote set-url origin ${origin} `;
 	}
 
 	await sh` git config pull.rebase true `;
 	await sh` git pull `;
 }
 
-async function gitAddReadmes(readmes: string[]) {
+export async function gitAddReadmes(readmes: string[]) {
 	for (const readme of readmes) {
 		await sh` git add ${readme} `;
 	}
 }
 
-async function commitReadmes(inputs: Inputs, readmes: string[]) {
-	if (!readmes.length) return console.info("no readmes to commit");
-
-	await gitAddReadmes(readmes);
+export async function commitReadmes(inputs: Inputs, readmes: string[]) {
+	if (!readmes.length) return console.error("no readmes to commit");
 
 	await sh` git commit -m ${inputs.commit_message} `;
 	await sh` git push `;
 
-	console.info("committed readmes");
+	console.info("pushed readme changes");
 }
 
-async function debugCommit(readmes: string[]) {
-	await gitAddReadmes(readmes);
-
+export async function debugCommit(readmes: string[]) {
 	for (const readme of readmes) {
+		console.info(`printing readme at ${readme}`);
 		await sh`cat ${readme}`;
 	}
 

@@ -1,8 +1,6 @@
+import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Inputs } from "./index";
-
-import path from "path";
 import * as module from "./index";
 
 const mocks = vi.hoisted(() => ({
@@ -18,7 +16,7 @@ vi.mock("zx", () => ({
 	["$"]: mocks.sh,
 }));
 
-const mockData: Inputs = {
+const mockInputData: module.Inputs = {
 	action: "stephansama",
 	heading_level: "3",
 	heading: "Inputs",
@@ -33,6 +31,26 @@ const mockData: Inputs = {
 	gh_token: "***",
 	base_branch: "main",
 };
+
+const mockFullReadmePaths = [
+	[
+		[
+			"/Users/stephansama-bot/Code/actions/action.yaml",
+			"/Users/stephansama-bot/Code/actions/do-not-track-polyfill/action.yml",
+			"/Users/stephansama-bot/Code/actions/generate-md-action-inputs/action.yml",
+		],
+	],
+	[
+		[
+			"/Users/stephansama-bot/Code/actions/action.yaml",
+			"/Users/stephansama-bot/Code/actions/do-not-track-polyfill/action.yml",
+		],
+	],
+];
+
+afterEach(() => {
+	vi.clearAllMocks();
+});
 
 describe("buildCommentTags", () => {
 	it.each([
@@ -65,8 +83,8 @@ describe("createHeading", () => {
 	])(
 		"creates the heading with the proper level (defaulting when out of range)",
 		(heading_level, prefix) => {
-			const expected = prefix + " " + mockData.heading;
-			const opts = { ...mockData, heading_level };
+			const expected = prefix + " " + mockInputData.heading;
+			const opts = { ...mockInputData, heading_level };
 			expect(module.createHeading(opts)).toBe(expected);
 		},
 	);
@@ -89,14 +107,91 @@ describe("getGitRoot", () => {
 			stdout: mockGitRoot,
 		});
 	});
-	afterEach(() => {
-		vi.clearAllMocks();
-	});
 
 	it("runs", async () => {
 		const root = await module.getGitRoot();
 		expect(mocks.sh).toHaveBeenCalled();
 		expect(root).toBe(mockGitRoot.trim());
+	});
+});
+
+describe("gitAddReadmes", () => {
+	it.each(mockFullReadmePaths)("calls sh for each readme", async (input) => {
+		await module.gitAddReadmes(input);
+		expect(mocks.sh).toHaveBeenCalledTimes(input.length);
+	});
+});
+
+describe("createTable", () => {
+	it("returns four items", () => {
+		const table = module.createTable(mockInputData, []);
+		expect(table.length).toBe(4);
+	});
+});
+
+describe("debugCommit", () => {
+	it.each(mockFullReadmePaths)(
+		"debugs as many as requested",
+		async (input) => {
+			await module.debugCommit(input);
+			expect(mocks.sh).toHaveBeenCalledTimes(input.length + 1);
+		},
+	);
+});
+
+describe("commitReadmes", () => {
+	it("logs to console.error when there are no readmes to commit", async () => {
+		const errorSpy = vi.spyOn(console, "error");
+		await module.commitReadmes(mockInputData, []);
+		expect(errorSpy).toHaveBeenCalled();
+	});
+
+	it("logs to console.info when there are readmes to commit", async () => {
+		const infoSpy = vi.spyOn(console, "info");
+		await module.commitReadmes(mockInputData, [
+			"/Users/stephansama-bot/actions/action.yml",
+		]);
+		expect(infoSpy).toHaveBeenCalled();
+	});
+});
+
+describe("setupGit", () => {
+	it("sets up git", () => {
+		module.setupGit(mockInputData);
+		expect(mocks.sh).toHaveBeenCalled();
+	});
+});
+
+describe("findIndices", () => {
+	const tags = module.buildCommentTags("ACTION-INPUT-LIST");
+	const md = String.raw;
+	const mockReadme = md`
+# Heading
+
+Content before
+
+- [ ] todo
+
+${tags.join("\n")}
+	`;
+
+	it("throws an error when there is no end comment", () => {
+		expect(() =>
+			module.findIndices(mockReadme.split("\n").slice(0, -2), tags),
+		).toThrowError();
+	});
+
+	it("finds the start and end indices", () => {
+		const [start, end] = module.findIndices(mockReadme.split("\n"), tags);
+		expect(start).toBe(7);
+		expect(end).toBe(8);
+	});
+
+	it("finds the last start and end indices when there are multiple", () => {
+		const mockLines = (mockReadme + "\n" + tags.join("\n")).split("\n");
+		const [start, end] = module.findIndices(mockLines, tags);
+		expect(start).toBe(10);
+		expect(end).toBe(11);
 	});
 });
 
@@ -112,10 +207,6 @@ describe("getActionsPaths", () => {
 		mocks.sh.mockReturnValue({ stdout: mockActionPaths });
 	});
 
-	afterEach(() => {
-		vi.clearAllMocks();
-	});
-
 	it("resolves the proper paths for the action.y*ml(s)", async () => {
 		const root = await module.getActionsPaths(mockGitRoot);
 		const resolvedPaths = mockActionPaths
@@ -127,16 +218,12 @@ describe("getActionsPaths", () => {
 });
 
 describe("loadInputs", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
 	it("throws an error when invalid git_provider is provided", () => {
 		mocks.getInput.mockImplementation(
-			(s: keyof typeof mockData | "verbose") => {
+			(s: keyof typeof mockInputData | "verbose") => {
 				if (s === "verbose") return "true";
 				if (s === "git_provider") return "invalid_provider";
-				return mockData[s];
+				return mockInputData[s];
 			},
 		);
 		expect(() => module.loadInputs()).toThrowError();
@@ -144,15 +231,15 @@ describe("loadInputs", () => {
 
 	it("loads valid inputs when supplied", () => {
 		mocks.getInput.mockImplementation(
-			(s: keyof typeof mockData | "verbose") => {
+			(s: keyof typeof mockInputData | "verbose") => {
 				if (s === "verbose") return "true";
-				return mockData[s];
+				return mockInputData[s];
 			},
 		);
 
 		const result = module.loadInputs();
 		for (const [name, val] of Object.entries(result)) {
-			expect(result[name as keyof typeof mockData]).toBe(val);
+			expect(result[name as keyof typeof mockInputData]).toBe(val);
 		}
 	});
 });
