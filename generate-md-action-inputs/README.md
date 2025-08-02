@@ -12,7 +12,7 @@
 
 <!-- ACTION-INPUT-LIST:START -->
 
-### Inputs
+### ⚙️ Inputs
 | Name               | Default                                      | Description                                                                                    | Required |
 | ------------------ | -------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------- |
 | action             | ${{github.repository}}                       | Github Action to parse the action.yml file from                                                | true     |
@@ -23,7 +23,7 @@
 | committer_email    | stephansama-bot@example.com                  | Email id used while committing to the repo                                                     | false    |
 | gh_token           | ${{github.token}}                            | Github token scoped to current repo (need to have an environment variable set if not supplied) | false    |
 | git_provider       | github                                       | Prefix for delimiting block start and end                                                      | false    |
-| heading            | Inputs                                       | Heading for table                                                                              | false    |
+| heading            | ⚙️ Inputs                                    | Heading for table                                                                              | false    |
 | heading_level      | 3                                            | Heading level for table                                                                        | false    |
 | readme_path        | ./README.md                                  | Path to the readme file to edit                                                                | false    |
 | ref                | ${{github.head_ref}}                         | Pull request head ref to match against                                                         | false    |

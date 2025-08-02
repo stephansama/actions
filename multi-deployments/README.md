@@ -59,7 +59,7 @@ jobs:
 
 <!-- ACTION-INPUT-LIST:START -->
 
-### Inputs
+### ⚙️ Inputs
 | Name                | Default | Description                                                                     | Required |
 | ------------------- | ------- | ------------------------------------------------------------------------------- | -------- |
 | environments        |         | Environments to deploy                                                          | true     |
