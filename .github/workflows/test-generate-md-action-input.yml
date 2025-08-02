@@ -30,6 +30,8 @@ jobs:
       - name: 🏗️ Build all actions
         run: pnpm run build
       - uses: ./generate-md-action-inputs
+        with:
+          skip_commit: true
   release:
     runs-on: ubuntu-latest
     if: ${{github.event.workflow_run.conclusion == 'success'}}
