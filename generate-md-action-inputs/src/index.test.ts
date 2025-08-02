@@ -8,6 +8,7 @@ const yaml = String.raw;
 
 const mocks = vi.hoisted(() => ({
 	existsSync: vi.fn(),
+	getBooleanInput: vi.fn(),
 	getInput: vi.fn(),
 	readFile: vi.fn(),
 	writeFile: vi.fn(),
@@ -24,6 +25,7 @@ vi.mock("node:fs", () => ({
 }));
 
 vi.mock("@actions/core", () => ({
+	getBooleanInput: mocks.getBooleanInput,
 	getInput: mocks.getInput,
 }));
 

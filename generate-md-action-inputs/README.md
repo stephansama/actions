@@ -8,7 +8,7 @@
 
 1. Go to your repository
 
-1. Add the following section to your README.md file, you can give whatever title you want. Just make sure that you use the below snippet in your readme. The workflow will replace this comment with the actual blog post list:
+1. Add the following section to your README.md file, you can give whatever title you want. Just make sure that you use the below snippet in your readme. The workflow will replace this comment with the actual action input list:
 
 ```md
 <!-- ACTION-INPUT-LIST:START -->

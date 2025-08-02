@@ -2,14 +2,6 @@ name: generate-md-action-inputs
 author: Stephan Randle
 description: Generate markdown table containing inputs from github action configuration
 inputs:
-  action:
-    default: ${{github.repository}}
-    description: Github Action to parse the action.yml file from
-    required: true
-  base_branch:
-    default: main
-    description: Base branch for main commits
-    required: true
   comment_tag_name:
     default: ACTION-INPUT-LIST
     description: Prefix for delimiting block start and end
@@ -32,7 +24,7 @@ inputs:
     required: false
   git_provider:
     default: github
-    description: Git Provider to base remote urls from
+    description: Git Provider to base remote urls from. Supported values are 'github' and 'gitlab'.
     required: false
   heading:
     default: ⚙️ Inputs
@@ -41,14 +33,6 @@ inputs:
   heading_level:
     default: "3"
     description: Heading level for table
-    required: false
-  readme_path:
-    default: ./README.md
-    description: Path to the readme file to edit
-    required: false
-  ref:
-    default: ${{github.head_ref}}
-    description: Pull request head ref to match against
     required: false
   skip_commit:
     default: "false"

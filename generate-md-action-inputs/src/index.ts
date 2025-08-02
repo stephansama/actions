@@ -229,8 +229,6 @@ export async function debugCommit(readmes: string[]) {
 }
 
 export function loadInputs(opts: core.InputOptions = { trimWhitespace: true }) {
-	const action = core.getInput("action", { ...opts, required: true });
-	const base_branch = core.getInput("base_branch", opts);
 	const comment_tag_name = core.getInput("comment_tag_name", opts);
 	const commit_message = core.getInput("commit_message", opts);
 	const committer_email = core.getInput("committer_email", opts);
@@ -239,15 +237,10 @@ export function loadInputs(opts: core.InputOptions = { trimWhitespace: true }) {
 	const git_provider = core.getInput("git_provider", opts);
 	const heading = core.getInput("heading", opts);
 	const heading_level = core.getInput("heading_level", opts);
-	const readme_path = core.getInput("readme_path", opts);
-	const ref = core.getInput("ref", opts);
-	const verbose = JSON.parse(core.getInput("verbose", opts) || "false");
+	const skip_commit = core.getBooleanInput("skip_commit", opts);
+	const verbose = core.getBooleanInput("verbose", opts);
 
 	if (verbose) sh.verbose = true;
-
-	const skip_commit = JSON.parse(
-		core.getInput("skip_commit", opts) || "false",
-	) as boolean;
 
 	const GitProviderKeys = Object.keys(GitProviders);
 	if (!GitProviderKeys.includes(git_provider)) {
@@ -257,8 +250,6 @@ export function loadInputs(opts: core.InputOptions = { trimWhitespace: true }) {
 	}
 
 	return {
-		action,
-		base_branch,
 		comment_tag_name,
 		commit_message,
 		committer_email,
@@ -267,8 +258,6 @@ export function loadInputs(opts: core.InputOptions = { trimWhitespace: true }) {
 		git_provider: git_provider as GitProvider,
 		heading,
 		heading_level,
-		readme_path,
-		ref,
 		skip_commit,
 	};
 }
