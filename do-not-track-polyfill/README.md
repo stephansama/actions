@@ -50,12 +50,6 @@ You can also customize which flags are set (see below).
 ---
 
 <!-- ACTION-INPUT-LIST:START -->
-
-### ⚙️ Inputs
-| Name       | Default | Description                             | Required |
-| ---------- | ------- | --------------------------------------- | -------- |
-| additional |         | Additional telemetry providers to block | false    |
-
 <!-- ACTION-INPUT-LIST:END -->
 
 Example:

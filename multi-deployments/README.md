@@ -58,14 +58,6 @@ jobs:
 ```
 
 <!-- ACTION-INPUT-LIST:START -->
-
-### ⚙️ Inputs
-| Name                | Default | Description                                                                     | Required |
-| ------------------- | ------- | ------------------------------------------------------------------------------- | -------- |
-| environments        |         | Environments to deploy                                                          | true     |
-| invalidate_previous | false   | Invalidate previous deploys                                                     | false    |
-| ref                 |         | Commit ref to reference for deploys (automatically uses Github CI environments) | false    |
-
 <!-- ACTION-INPUT-LIST:END -->
 
 ### **Example environments JSON**
