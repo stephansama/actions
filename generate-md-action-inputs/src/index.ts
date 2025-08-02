@@ -57,14 +57,19 @@ find . -type f -name 'action.y*ml'
 		.map((p) => path.resolve(gitRoot, p));
 }
 
-function buildCommentTag(tagName: string, position: "START" | "END" = "START") {
-	return `<!-- ${tagName}:${position} -->` as const;
+function buildCommentTags(tagName: string) {
+	return [
+		`<!-- ${tagName}:START -->` as const,
+		`<!-- ${tagName}:END -->` as const,
+	] as const;
 }
 
 export async function updateLocalActionReadmes(inputs: Inputs) {
 	const gitRoot = await getGitRoot();
 	const actions = await getActionsPaths(gitRoot);
-	const startCommentTag = buildCommentTag(inputs.comment_tag_name);
+	const [startCommentTag, endCommentTag] = buildCommentTags(
+		inputs.comment_tag_name,
+	);
 
 	const yamlActions = (
 		await Promise.all(
@@ -111,21 +116,32 @@ export async function updateLocalActionReadmes(inputs: Inputs) {
 
 				const readmeLines = action.readme.split("\n");
 
-				const commentIndex = readmeLines.findIndex(
+				const startIndex = readmeLines.findIndex(
 					(f) => f.trim() === startCommentTag,
+				);
+
+				const endIndex = readmeLines.findIndex(
+					(f) => f.trim() === endCommentTag,
 				);
 
 				const heading = createHeading(inputs);
 				const table = markdownTable([tableHeading, ...entries]);
 
-				readmeLines.splice(commentIndex + 1, 0, heading, table);
+				readmeLines.splice(
+					startIndex + 1,
+					Math.max(0, endIndex - startIndex - 1),
+					"",
+					heading,
+					table,
+					"",
+				);
 
 				await fsp.writeFile(action.readmePath, readmeLines.join("\n"));
 
 				return action.readmePath;
 			}),
 		)
-	).filter(Boolean);
+	).filter((f) => f !== "false");
 }
 
 async function setupGit(inputs: Inputs) {
