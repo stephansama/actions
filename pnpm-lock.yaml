@@ -111,6 +111,18 @@ importers:
         specifier: ^1.48.4
         version: 1.48.4
 
+  generate-md-action-inputs:
+    devDependencies:
+      markdown-table:
+        specifier: ^3.0.4
+        version: 3.0.4
+      yaml:
+        specifier: ^2.8.0
+        version: 2.8.0
+      zx:
+        specifier: ^8.7.2
+        version: 8.7.2
+
   multi-deployments: {}
 
 packages:
@@ -3060,6 +3072,7 @@ packages:
   source-map@0.8.0-beta.0:
     resolution: {integrity: sha512-2ymg6oRBpebeZi9UUNsgQ89bhx01TcTkmNTGnNO88imTmbSgy4nfujrgVEFKWpMTEGA11EDkTt7mqObTPdigIA==}
     engines: {node: '>= 8'}
+    deprecated: The work that was done in this beta branch won't be included in future versions
 
   spawndamnit@3.0.1:
     resolution: {integrity: sha512-MmnduQUuHCoFckZoWnXsTg7JaiLBJrKFj9UI2MbRPGaJeVpsLcVBu6P/IGZovziM/YBsellCmsprgNA+w0CzVg==}
@@ -3606,6 +3619,11 @@ packages:
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
+
+  zx@8.7.2:
+    resolution: {integrity: sha512-4Wtl46msLFx6QW6GjLu1aRnFhavukT4VSp4tdXvfRIBRNW3RP7Si3RlRFD7YeQeecQBacVFRQQgm5LTvE/YEGQ==}
+    engines: {node: '>= 12.17.0'}
+    hasBin: true
 
 snapshots:
 
@@ -7363,3 +7381,5 @@ snapshots:
   zod@3.22.3: {}
 
   zwitch@2.0.4: {}
+
+  zx@8.7.2: {}

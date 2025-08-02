@@ -1,21 +1,25 @@
-name: 🧪 Test do not track (True)
+name: 🧪 Test generate-md-action-inputs
 on:
   pull_request:
     branches: [main]
-    paths: ["do-not-track-polyfill/**.ts"]
+    paths: ["generate-md-action-inputs/**.ts"]
   workflow_run:
     workflows: ["release"]
     types: ["completed"]
   workflow_dispatch:
 env:
-  DO_NOT_TRACK: 1
   HUSKY: 0
+permissions:
+  actions: write
+  contents: write
 jobs:
   preview:
     runs-on: ubuntu-latest
     if: ${{github.event.workflow_run.conclusion != 'success'}}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{github.event.pull_request.head.ref}}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -25,24 +29,21 @@ jobs:
         run: pnpm install
       - name: 🏗️ Build all actions
         run: pnpm run build
-      - uses: ./do-not-track-polyfill
+      - uses: ./generate-md-action-inputs
         with:
-          additional: |
-            ADDITIONAL_DISABLE_TELEMETRY=true
-            TRACK_ME_PLEASE=false
-      - run: node ./scripts/verify-do-not-track.js
+          skip_commit: true
+          verbose: true
   release:
     runs-on: ubuntu-latest
     if: ${{github.event.workflow_run.conclusion == 'success'}}
     steps:
-      - uses: stephansama/actions/do-not-track-polyfill@v1
-        with:
-          additional: |
-            ADDITIONAL_DISABLE_TELEMETRY=true
-            TRACK_ME_PLEASE=false
       - uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            scripts
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
-      - run: node ./scripts/verify-do-not-track.js
+        with:
+          cache: "pnpm"
+          node-version-file: ".nvmrc"
+      - uses: stephansama/actions/generate-md-action-inputs@v1
+        with:
+          skip_commit: true
+          verbose: true

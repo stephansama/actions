@@ -49,11 +49,8 @@ You can also customize which flags are set (see below).
 
 ---
 
-## ⚙️ Inputs (Optional)
-
-| Name         | Description                                                              |
-| ------------ | ------------------------------------------------------------------------ |
-| `additional` | valid json object containing environment names and environment variables |
+<!-- ACTION-INPUT-LIST:START -->
+<!-- ACTION-INPUT-LIST:END -->
 
 Example:
 
