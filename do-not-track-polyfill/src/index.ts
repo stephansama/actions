@@ -18,6 +18,7 @@ export function parseAdditionalEnvironments(): dotenvx.DotenvParseOutput {
 export function getTelemetryEnvironments() {
 	return {
 		ASTRO_TELEMETRY_DISABLED: 1,
+		AZURE_CORE_COLLECT_TELEMETRY: 0,
 		NEXT_TELEMETRY_DISABLED: 1,
 		STORYBOOK_DISABLE_TELEMETRY: 1,
 		TURBO_TELEMETRY_DISABLED: 1,
