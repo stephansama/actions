@@ -7,16 +7,14 @@ export async function run() {
 	const { ref, token } = loadEnvVariables();
 	const { auto_inactive, environments } = loadInputs();
 	const { envs, urls } = parseEnvironments(environments);
-
-	const octokit = github.getOctokit(token);
-
 	const { owner, repo } = github.context.repo;
-
 	const commonProps = {
 		auto_inactive,
 		owner,
 		repo,
 	};
+
+	const octokit = github.getOctokit(token);
 
 	const deploymentData = await Promise.all(
 		envs.map(async (environment) =>
@@ -80,9 +78,9 @@ export function loadInputs() {
 
 	const environments: [string, string][] = Object.entries(parsedEnvironments);
 
-	const auto_inactive: boolean = JSON.parse(
-		core.getInput("invalidate_previous") || "false",
-	);
+	const auto_inactive = core.getBooleanInput("invalidate_previous");
+
+	console.info("loaded action inputs");
 
 	return {
 		auto_inactive,
@@ -114,6 +112,8 @@ export function loadEnvVariables() {
 			"failed to load $GITHUB_TOKEN from head. it is needed to create deploys",
 		);
 	}
+
+	console.info("loaded environment variables");
 
 	return {
 		ref,
