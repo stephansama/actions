@@ -7,22 +7,23 @@ declare global {
 			 * @see https://consoledonottrack.com/
 			 * @description A proposed unified standard for opting out of telemetry for TUI/console apps.
 			 */
-			readonly DO_NOT_TRACK: string;
+			readonly DO_NOT_TRACK?: string;
 		}
 	}
 }
 
 interface GitHubEnvironments {
 	/** @description Always set to true. */
-	readonly CI: string;
+	readonly CI: "true";
 
 	/**
 	 * @description
 	 * The name of the base ref or target branch of the pull request in a workflow run.
 	 * This is only set when the event that triggers a workflow run is
-	 * either pull_request or pull_request_target. For example, main.
+	 * either `pull_request` or `pull_request_target`.
+	 * For example, `main`.
 	 */
-	readonly GITHUB_BASE_REF: string;
+	readonly GITHUB_BASE_REF?: string;
 
 	/**
 	 * @description
@@ -31,7 +32,7 @@ interface GitHubEnvironments {
 	 * For example, `/home/\*\*\/_runner_file_commands/env-89345`.
 	 * For more information, see [Workflow](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#setting-an-environment-variable) commands for GitHub Actions.
 	 */
-	readonly GITHUB_ENV: string;
+	readonly GITHUB_ENV?: string;
 
 	/**
 	 * @description
@@ -47,7 +48,7 @@ interface GitHubEnvironments {
 	 * run is either `pull_request` or `pull_request_target`.
 	 * For example, `feature-branch-1`.
 	 */
-	readonly GITHUB_HEAD_REF: string;
+	readonly GITHUB_HEAD_REF?: string;
 
 	/**
 	 * @description
@@ -81,7 +82,7 @@ interface GitHubEnvironments {
 	 * For tags it is `refs/tags/<tag_name>`.
 	 * For example, `refs/heads/feature-branch-1`.
 	 */
-	readonly GITHUB_REF: string;
+	readonly GITHUB_REF?: string;
 
 	/**
 	 * @description
@@ -96,7 +97,7 @@ interface GitHubEnvironments {
 	 * @description
 	 * `true` if branch protections or rulesets are configured for the ref that triggered the workflow run.
 	 */
-	readonly GITHUB_REF_PROTECTED: string;
+	readonly GITHUB_REF_PROTECTED?: "true";
 
 	/**
 	 * @description
