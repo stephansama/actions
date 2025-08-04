@@ -22,6 +22,7 @@
 		"@eslint/json": "^0.13.1",
 		"@eslint/markdown": "^7.1.0",
 		"@stephansama/catppuccin-typedoc": "^1.0.0",
+		"@stephansama/github-env": "^0.1.0",
 		"@tsconfig/recommended": "^1.0.10",
 		"@turbo/gen": "^2.5.5",
 		"@types/node": "^24.1.0",

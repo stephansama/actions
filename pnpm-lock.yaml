@@ -35,6 +35,9 @@ importers:
       '@stephansama/catppuccin-typedoc':
         specifier: ^1.0.0
         version: 1.0.0
+      '@stephansama/github-env':
+        specifier: ^0.1.0
+        version: 0.1.0
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.10
@@ -1034,6 +1037,9 @@ packages:
 
   '@stephansama/catppuccin-typedoc@1.0.0':
     resolution: {integrity: sha512-0Bzll/AOKRA06Nc0jhZlxEA2tyiFgp2x/lAQwjT0BxI/cBCXxL+NtOyEHeHE59gP6mERaArBPT8ibuKWb6Bc3w==}
+
+  '@stephansama/github-env@0.1.0':
+    resolution: {integrity: sha512-T711vOlWiwy5NjGfk9Bm4u+MH6NkqBMQh6TvnPBfEaIhXRtxEZ1byo1+fr0a6KvyodnWzQEsWv4WDDcqzvSSrg==}
 
   '@tootallnate/quickjs-emscripten@0.23.0':
     resolution: {integrity: sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA==}
@@ -4174,6 +4180,8 @@ snapshots:
   '@speed-highlight/core@1.2.7': {}
 
   '@stephansama/catppuccin-typedoc@1.0.0': {}
+
+  '@stephansama/github-env@0.1.0': {}
 
   '@tootallnate/quickjs-emscripten@0.23.0': {}
 
