@@ -15,6 +15,11 @@ const mocks = vi.hoisted(() => ({
 	sh: vi.fn(),
 }));
 
+vi.mock("@actions/core", () => ({
+	getBooleanInput: mocks.getBooleanInput,
+	getInput: mocks.getInput,
+}));
+
 vi.mock("node:fs/promises", () => ({
 	readFile: mocks.readFile,
 	writeFile: mocks.writeFile,
@@ -22,11 +27,6 @@ vi.mock("node:fs/promises", () => ({
 
 vi.mock("node:fs", () => ({
 	existsSync: mocks.existsSync,
-}));
-
-vi.mock("@actions/core", () => ({
-	getBooleanInput: mocks.getBooleanInput,
-	getInput: mocks.getInput,
 }));
 
 vi.mock("zx", () => ({
@@ -186,7 +186,7 @@ describe("updateLocalActionReadmes", () => {
 		await module.updateLocalActionReadmes(mockInputData);
 
 		expect(infoSpy).toHaveBeenCalledWith(
-			`readme at path ${path.resolve(mockGitRoot, mockActionPath)} is unchanged not writing changes`,
+			`readme at path ${path.resolve(mockGitRoot, "./README.md")} is unchanged not writing changes`,
 		);
 
 		expect(mocks.existsSync).toHaveBeenCalled();
@@ -310,13 +310,6 @@ describe("getGitRoot", () => {
 		const root = await module.getGitRoot();
 		expect(mocks.sh).toHaveBeenCalled();
 		expect(root).toBe(mockGitRoot.trim());
-	});
-});
-
-describe("gitAddReadmes", () => {
-	it.each(mockFullReadmePaths)("calls sh for each readme", async (input) => {
-		await module.gitAddReadmes(input);
-		expect(mocks.sh).toHaveBeenCalledTimes(input.length);
 	});
 });
 

@@ -18,6 +18,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@actions/core", () => ({
 	getInput: mocks.getInput,
+	getBooleanInput: vi.fn(
+		(input: string) =>
+			input === "invalidate_previous" && mocks.getInput(input) === "true",
+	),
 }));
 
 vi.mock("@actions/github", () => ({
