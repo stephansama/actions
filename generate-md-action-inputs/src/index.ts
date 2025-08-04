@@ -40,7 +40,9 @@ export async function run() {
 
 	const readmes = await updateLocalActionReadmes(inputs);
 
-	await gitAddReadmes(readmes);
+	for (const readme of readmes) {
+		await sh` git add ${readme} `;
+	}
 
 	if (inputs.skip_commit) {
 		await debugCommit(readmes);
@@ -109,21 +111,17 @@ export async function loadActionData(actionPath: string) {
 	const opts: { encoding: BufferEncoding } = { encoding: "utf8" };
 	const file = await fsp.readFile(actionPath, opts);
 	const data = yaml.parse(file) as ActionType;
-	const readmePath = actionPath.replace(/action.y*ml/, "README.md");
+	const readmePath = actionPath.replace(/action.ya?ml/, "README.md");
 	const readme =
 		fs.existsSync(readmePath) && (await fsp.readFile(readmePath, opts));
 	return { actionPath, data, readme, readmePath };
 }
 
-export function isValidActionData([startTag, endTag]: BuiltCommentTags) {
+export function isValidActionData(tags: BuiltCommentTags) {
 	return (actionData: ActionData) => {
-		if (!actionData.readme) return false;
+		if (!actionData.readme || !actionData.data?.inputs) return false;
 		const lines = actionData.readme.split("\n");
-		return (
-			actionData.data?.inputs &&
-			lines.some((f) => f.trim() === startTag) &&
-			lines.some((f) => f.trim() === endTag)
-		);
+		return tags.every((tag) => lines.some((l) => l.trim() === tag));
 	};
 }
 
@@ -202,12 +200,6 @@ export async function setupGit(inputs: Inputs) {
 
 	await sh` git config pull.rebase true `;
 	await sh` git pull `;
-}
-
-export async function gitAddReadmes(readmes: string[]) {
-	for (const readme of readmes) {
-		await sh` git add ${readme} `;
-	}
 }
 
 export async function commitReadmes(inputs: Inputs, readmes: string[]) {
