@@ -1,0 +1,15 @@
+name: generate-md-action-inputs example
+on:
+  workflow_dispatch:
+permissions:
+  actions: write
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - uses: stephansama/actions/generate-md-action-inputs@v1
+        with:
+          verbose: true
