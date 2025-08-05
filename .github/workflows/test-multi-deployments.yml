@@ -32,7 +32,7 @@ jobs:
         run: pnpm install
       - name: 🏗️ Build all actions
         run: pnpm run build
-      - run: node ./scripts/generate-multi-urls.js
+      - run: node ./.github/scripts/generate-multi-urls.js
         id: generate
       - uses: ./multi-deployments
         env:
@@ -47,10 +47,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: |
-            scripts
+            .github/scripts
       - uses: actions/setup-node@v4
       - run: npm install @actions/core
-      - run: node ./scripts/generate-multi-urls.js
+      - run: node ./.github/scripts/generate-multi-urls.js
         id: generate
       - uses: stephansama/actions/multi-deployments@v1
         env:
