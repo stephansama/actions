@@ -48,6 +48,16 @@ export default function generator(plop: PlopTypes.NodePlopAPI) {
 				templateFile: "template/BLANK",
 				type: "add",
 			},
+			{
+				path: "{{ turbo.paths.root }}/.github/workflows/examples/example-{{ dashCase name }}.yml",
+				templateFile: "./template/workflow-example.yml.hbs",
+				type: "add",
+			},
+			{
+				path: "{{ turbo.paths.root }}/.github/workflows/test-{{ dashCase name }}.yml",
+				templateFile: "./template/workflow-test.yml.hbs",
+				type: "add",
+			},
 		],
 	});
 }
