@@ -6,4 +6,4 @@ branding:
   color: red
 runs:
   using: node20
-  main: ./scripts/_index.js
+  main: ./.github/scripts/_index.js

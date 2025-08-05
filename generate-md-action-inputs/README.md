@@ -46,6 +46,8 @@ This GitHub Action automatically generates a Markdown table of your action's inp
 
     Create a new workflow file in your `.github/workflows` directory (e.g., `.github/workflows/docs.yml`) with the following content:
 
+[example-generate-md-action-inputs.yml](../.github/workflows/examples/example-generate-md-action-inputs.yml)
+
 ```yaml
 name: generate-md-action-inputs example
 on:
@@ -75,12 +77,13 @@ permissions:
 <!-- ACTION-INPUT-LIST:START -->
 
 ### ⚙️ Inputs
+
 | Name               | Default                                      | Description                                                                                    | Required |
 | ------------------ | -------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------- |
 | comment_tag_name   | ACTION-INPUT-LIST                            | Prefix for delimiting block start and end                                                      | false    |
 | commit_message     | Updated readme with the latest action inputs | Commit message used while committing to the repo                                               | false    |
 | committer_username | stephansama-bot                              | Username used while committing to the repo                                                     | false    |
-| committer_email    | stephansama-bot@example.com                  | Email id used while committing to the repo                                                     | false    |
+| committer_email    | <stephansama-bot@example.com>                | Email id used while committing to the repo                                                     | false    |
 | gh_token           | ${{github.token}}                            | Github token scoped to current repo (need to have an environment variable set if not supplied) | false    |
 | git_provider       | github                                       | Git Provider to base remote urls from. Supported values are 'github' and 'gitlab'.             | false    |
 | heading            | ⚙️ Inputs                                    | Heading for table                                                                              | false    |

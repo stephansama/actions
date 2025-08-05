@@ -5,6 +5,7 @@ on:
     paths:
       - "**/action.yml"
       - "**.ts"
+      - "!**/config.ts"
       - "!**.d.ts"
       - "!**.spec.ts"
       - "!**.test.ts"

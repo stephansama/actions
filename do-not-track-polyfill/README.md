@@ -19,10 +19,9 @@ A simple GitHub Action that conditionally disables telemetry by setting opt-out 
 
 Add the action to your workflow **before** any steps that might invoke telemetry aware tools
 
-example workflow:
+[example-do-not-track-polyfill.yml](../.github/workflows/examples/example-do-not-track-polyfill.yml)
 
 ```yaml
-# .github/workflows/examples/do-not-track-polyfill.yml
 name: do-not-track-polyfill example
 on:
     workflow_dispatch:
@@ -52,13 +51,12 @@ You can also customize which flags are set (see below).
 <!-- ACTION-INPUT-LIST:START -->
 
 ### ⚙️ Inputs
+
 | Name       | Default   | Description                             | Required |
 | ---------- | --------- | --------------------------------------- | -------- |
 | additional | undefined | Additional telemetry providers to block | false    |
 
 <!-- ACTION-INPUT-LIST:END -->
-
-Example:
 
 ```yaml
 - uses: stephansama/actions/do-not-track-polyfill-action@v1
