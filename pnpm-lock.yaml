@@ -32,9 +32,6 @@ importers:
       '@eslint/markdown':
         specifier: ^7.1.0
         version: 7.1.0
-      '@stephansama/catppuccin-typedoc':
-        specifier: ^1.0.0
-        version: 1.0.0
       '@stephansama/github-env':
         specifier: ^0.1.0
         version: 0.1.0
@@ -1034,9 +1031,6 @@ packages:
 
   '@speed-highlight/core@1.2.7':
     resolution: {integrity: sha512-0dxmVj4gxg3Jg879kvFS/msl4s9F3T9UXC1InxgOf7t5NvcPD97u/WTA5vL/IxWHMn7qSxBozqrnnE2wvl1m8g==}
-
-  '@stephansama/catppuccin-typedoc@1.0.0':
-    resolution: {integrity: sha512-0Bzll/AOKRA06Nc0jhZlxEA2tyiFgp2x/lAQwjT0BxI/cBCXxL+NtOyEHeHE59gP6mERaArBPT8ibuKWb6Bc3w==}
 
   '@stephansama/github-env@0.1.0':
     resolution: {integrity: sha512-T711vOlWiwy5NjGfk9Bm4u+MH6NkqBMQh6TvnPBfEaIhXRtxEZ1byo1+fr0a6KvyodnWzQEsWv4WDDcqzvSSrg==}
@@ -4178,8 +4172,6 @@ snapshots:
   '@sindresorhus/is@7.0.2': {}
 
   '@speed-highlight/core@1.2.7': {}
-
-  '@stephansama/catppuccin-typedoc@1.0.0': {}
 
   '@stephansama/github-env@0.1.0': {}
 
