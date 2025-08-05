@@ -4,8 +4,7 @@ import * as github from "@actions/github";
 if (require.main === module) run();
 
 export async function run() {
-	const { ref, token } = loadEnvVariables();
-	const { auto_inactive, environments } = loadInputs();
+	const { auto_inactive, environments, ref, token } = loadInputs();
 	const { envs, urls } = parseEnvironments(environments);
 	const { owner, repo } = github.context.repo;
 	const commonProps = {
@@ -67,6 +66,8 @@ export function parseEnvironments(environments: [string, string][]) {
 
 export function loadInputs() {
 	const inputEnvironments = core.getInput("environments");
+	const token = core.getInput("token");
+	const ref = core.getInput("ref");
 
 	if (!inputEnvironments) {
 		throw new Error(
@@ -85,37 +86,6 @@ export function loadInputs() {
 	return {
 		auto_inactive,
 		environments,
-	};
-}
-
-export function loadEnvVariables() {
-	const token = process.env.GITHUB_TOKEN;
-	const ref =
-		core.getInput("ref") ||
-		process.env.GITHUB_HEAD_REF ||
-		process.env.GITHUB_REF;
-
-	if (!ref && !token) {
-		throw new Error(
-			"failed to load $GITHUB_TOKEN or target commit ref. both are needed to create deploys",
-		);
-	}
-
-	if (!ref) {
-		throw new Error(
-			"failed to load ref to create deploys from. it is needed to create deploys",
-		);
-	}
-
-	if (!token) {
-		throw new Error(
-			"failed to load $GITHUB_TOKEN from head. it is needed to create deploys",
-		);
-	}
-
-	console.info("loaded environment variables");
-
-	return {
 		ref,
 		token,
 	};

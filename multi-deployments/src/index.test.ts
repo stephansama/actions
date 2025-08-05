@@ -68,51 +68,6 @@ describe("multi-deployments", () => {
 		});
 	});
 
-	describe("loadEnvVariables", () => {
-		it("throws an error when no environment variables are supplied", () => {
-			expect(module.loadEnvVariables).toThrowError();
-		});
-
-		it("throws an error when token is missing", () => {
-			vi.stubEnv("GITHUB_REF", "true");
-			expect(module.loadEnvVariables).toThrowError();
-		});
-
-		it("throws an error when ref is missing", () => {
-			vi.stubEnv("GITHUB_TOKEN", "true");
-			expect(module.loadEnvVariables).toThrowError();
-		});
-
-		it("returns the proper values when proper input variables are supplied", () => {
-			const envToken = process.env.GITHUB_TOKEN || "token";
-			const envRef = process.env.GITHUB_HEAD_REF || "ref";
-
-			vi.stubEnv("GITHUB_TOKEN", envToken);
-			vi.stubEnv("GITHUB_REF", envRef);
-
-			const { ref, token } = module.loadEnvVariables();
-
-			expect(ref).toBe(envRef);
-			expect(token).toBe(envToken);
-		});
-
-		it("uses action input ref over environment variable", () => {
-			const envRef = "ref";
-			const mockRef = "mockRef";
-			const envToken = "token";
-
-			mocks.getInput.mockImplementation(() => mockRef);
-
-			vi.stubEnv("GITHUB_REF", envRef);
-			vi.stubEnv("GITHUB_TOKEN", envToken);
-
-			const { ref, token } = module.loadEnvVariables();
-
-			expect(ref).toBe(mockRef);
-			expect(token).toBe(envToken);
-		});
-	});
-
 	describe("loadInputs", () => {
 		it("throws an error when you do not supply any environments", () => {
 			expect(module.loadInputs).toThrowError();
