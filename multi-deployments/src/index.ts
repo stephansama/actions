@@ -81,8 +81,6 @@ export function loadInputs() {
 
 	const auto_inactive = core.getBooleanInput("invalidate_previous");
 
-	console.info("loaded action inputs");
-
 	return {
 		auto_inactive,
 		environments,
