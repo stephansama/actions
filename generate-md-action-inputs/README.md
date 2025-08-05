@@ -1,6 +1,6 @@
 # Generate Markdown from Action Inputs
 
-[![CI](https://github.com/stephansama/generate-md-action-inputs/actions/workflows/ci.yml/badge.svg)](https://github.com/stephansama/generate-md-action-inputs/actions/workflows/ci.yml)
+[![🧪 Test generate-md-action-inputs](https://github.com/stephansama/actions/actions/workflows/test-generate-md-action-input.yml/badge.svg)](https://github.com/stephansama/actions/actions/workflows/test-generate-md-action-input.yml)
 
 This GitHub Action automatically generates a Markdown table of your action's inputs and adds it to your `README.md`. It's a simple way to keep your documentation in sync with your `action.yml` file.
 
@@ -46,22 +46,23 @@ This GitHub Action automatically generates a Markdown table of your action's inp
 
     Create a new workflow file in your `.github/workflows` directory (e.g., `.github/workflows/docs.yml`) with the following content:
 
-    ```yaml
-    name: Generate Docs
-    on:
-        push:
-            branches:
-                - main
-    jobs:
-        docs:
-            runs-on: ubuntu-latest
-            steps:
-                - uses: actions/checkout@v3
-                - name: Generate action inputs markdown table
-                  uses: stephansama/generate-md-action-inputs@v1
-                  with:
-                      gh_token: ${{ secrets.GITHUB_TOKEN }}
-    ```
+```yaml
+name: generate-md-action-inputs example
+on:
+    workflow_dispatch:
+permissions:
+    actions: write
+    contents: write
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+            - uses: stephansama/actions/generate-md-action-inputs@v1
+              with:
+                  verbose: true
+```
 
 ## Required permissions
 
@@ -74,12 +75,13 @@ permissions:
 <!-- ACTION-INPUT-LIST:START -->
 
 ### ⚙️ Inputs
+
 | Name               | Default                                      | Description                                                                                    | Required |
 | ------------------ | -------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------- |
 | comment_tag_name   | ACTION-INPUT-LIST                            | Prefix for delimiting block start and end                                                      | false    |
 | commit_message     | Updated readme with the latest action inputs | Commit message used while committing to the repo                                               | false    |
 | committer_username | stephansama-bot                              | Username used while committing to the repo                                                     | false    |
-| committer_email    | stephansama-bot@example.com                  | Email id used while committing to the repo                                                     | false    |
+| committer_email    | <stephansama-bot@example.com>                | Email id used while committing to the repo                                                     | false    |
 | gh_token           | ${{github.token}}                            | Github token scoped to current repo (need to have an environment variable set if not supplied) | false    |
 | git_provider       | github                                       | Git Provider to base remote urls from. Supported values are 'github' and 'gitlab'.             | false    |
 | heading            | ⚙️ Inputs                                    | Heading for table                                                                              | false    |
