@@ -10,9 +10,13 @@ inputs:
     description: Invalidate previous deploys
     required: false
   ref:
-    default: ""
+    default: ${{github.ref}}
     description: Commit ref to reference for deploys (automatically uses Github CI environments)
     required: false
+  token:
+    default: ${{github.token}}
+    description: GitHub token used to create octokit client
+    required: true
 runs:
   using: node20
   main: ./dist/index.js
