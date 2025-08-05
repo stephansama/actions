@@ -355,11 +355,8 @@ describe("setupGit", () => {
 
 describe("findIndices", () => {
 	it("throws an error when the end comment is before the start", () => {
-		const lines = mockReadme.split("\n");
-		const endTag = lines[lines.lastIndexOf(mockTags[1])];
-
-		lines.splice(lines.length - 2, 1);
-		lines.splice(lines.length - 2, 0, endTag + "");
+		const [startTag, endTag] = mockTags;
+		const lines = ["one line", endTag, "another line", startTag];
 
 		expect(() => module.findIndices(lines, mockTags)).toThrowError();
 	});
