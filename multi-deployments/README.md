@@ -19,7 +19,7 @@ Add the multi-deployments action to your workflow. You'll need to provide a JSON
 
 This example demonstrates how to use the multi-deployments action to create preview deployments for multiple URLs.
 
-[example-multi-deployments.yml](.github/workflows/examples/example-multi-deployments.yml)
+[example-multi-deployments.yml](../.github/workflows/examples/example-multi-deployments.yml)
 
 ```yaml
 name: multi-deployments example

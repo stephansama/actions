@@ -46,7 +46,7 @@ This GitHub Action automatically generates a Markdown table of your action's inp
 
     Create a new workflow file in your `.github/workflows` directory (e.g., `.github/workflows/docs.yml`) with the following content:
 
-[example-generate-md-action-inputs.yml](.github/workflows/examples/example-generate-md-action-inputs.yml)
+[example-generate-md-action-inputs.yml](../.github/workflows/examples/example-generate-md-action-inputs.yml)
 
 ```yaml
 name: generate-md-action-inputs example
