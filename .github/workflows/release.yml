@@ -5,6 +5,7 @@ on:
     paths:
       - "**/action.yml"
       - "**.ts"
+      - "!**.d.ts"
       - "!**.spec.ts"
       - "!**.test.ts"
   workflow_dispatch:

@@ -95,13 +95,16 @@ export function buildCommentTags(tagName: string) {
 
 export function findIndices(
 	lines: string[],
-	[startTag, endTag]: BuiltCommentTags,
+	tags: BuiltCommentTags,
 ): [number, number] {
-	const startIndex = lines.lastIndexOf(startTag);
-	const endIndex = lines.lastIndexOf(endTag);
+	const [startIndex, endIndex] = tags.map((tag) => lines.lastIndexOf(tag));
 
 	if (startIndex === -1 || endIndex === -1) {
 		throw new Error("not able to find start or end comment index");
+	}
+
+	if (endIndex < startIndex) {
+		throw new Error("end tag appears before start tag");
 	}
 
 	return [startIndex, endIndex];
@@ -236,9 +239,8 @@ export function loadInputs(opts: core.InputOptions = { trimWhitespace: true }) {
 
 	const GitProviderKeys = Object.keys(GitProviders);
 	if (!GitProviderKeys.includes(git_provider)) {
-		throw new Error(
-			`git_provider must be one of ${GitProviderKeys.join()}`,
-		);
+		const possible = GitProviderKeys.join();
+		throw new Error(`git_provider must be one of ${possible}`);
 	}
 
 	return {
