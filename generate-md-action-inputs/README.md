@@ -15,20 +15,20 @@ This GitHub Action automatically generates a Markdown table of your action's inp
 **Before:**
 
 ```markdown
-<!-- ACTION-INPUT-LIST:START -->
-<!-- ACTION-INPUT-LIST:END -->
+<!-- ACTION start -->
+<!-- ACTION end -->
 ```
 
 **After:**
 
 ```markdown
-<!-- ACTION-INPUT-LIST:START -->
+<!-- ACTION start -->
 
 | Name       | Default         | Description               | Required |
 | ---------- | --------------- | ------------------------- | -------- |
 | `my-input` | `default-value` | This is my amazing input. | `false`  |
 
-<!-- ACTION-INPUT-LIST:END -->
+<!-- ACTION end -->
 ```
 
 ## Usage
@@ -38,8 +38,8 @@ This GitHub Action automatically generates a Markdown table of your action's inp
     Add the following comment block to your `README.md` where you want the table of inputs to be generated:
 
     ```markdown
-    <!-- ACTION-INPUT-LIST:START -->
-    <!-- ACTION-INPUT-LIST:END -->
+    <!-- ACTION start -->
+    <!-- ACTION end -->
     ```
 
 2. **Create a workflow file:**
@@ -74,21 +74,21 @@ permissions:
     contents: write
 ```
 
-<!-- ACTION-INPUT-LIST:START -->
+<!-- ACTION start -->
 
-### ⚙️ Inputs
+### actions
 
-| Name               | Default                                      | Description                                                                                    | Required |
-| ------------------ | -------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------- |
-| comment_tag_name   | ACTION-INPUT-LIST                            | Prefix for delimiting block start and end                                                      | false    |
-| commit_message     | Updated readme with the latest action inputs | Commit message used while committing to the repo                                               | false    |
-| committer_username | stephansama-bot                              | Username used while committing to the repo                                                     | false    |
-| committer_email    | <stephansama-bot@example.com>                | Email id used while committing to the repo                                                     | false    |
-| gh_token           | ${{github.token}}                            | Github token scoped to current repo (need to have an environment variable set if not supplied) | false    |
-| git_provider       | github                                       | Git Provider to base remote urls from. Supported values are 'github' and 'gitlab'.             | false    |
-| heading            | ⚙️ Inputs                                    | Heading for table                                                                              | false    |
-| heading_level      | 3                                            | Heading level for table                                                                        | false    |
-| skip_commit        | false                                        | Skips committing the changes to repo                                                           | false    |
-| verbose            | false                                        | Whether or not to enable verbose logging for shell scripts                                     | false    |
+| 🏷️ Name            | ✅ Required | ⚙️ Default                                   | 📝 Description                                                                                 |
+| ------------------ | ----------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| comment_tag_name   | false       | ACTION-INPUT-LIST                            | Prefix for delimiting block start and end                                                      |
+| commit_message     | false       | Updated readme with the latest action inputs | Commit message used while committing to the repo                                               |
+| committer_username | false       | stephansama-bot                              | Username used while committing to the repo                                                     |
+| committer_email    | false       | stephansama-bot@example.com                  | Email id used while committing to the repo                                                     |
+| gh_token           | false       | ${{github.token}}                            | Github token scoped to current repo (need to have an environment variable set if not supplied) |
+| git_provider       | false       | github                                       | Git Provider to base remote urls from. Supported values are 'github' and 'gitlab'.             |
+| heading            | false       | ⚙️ Inputs                                    | Heading for table                                                                              |
+| heading_level      | false       | 3                                            | Heading level for table                                                                        |
+| skip_commit        | false       | false                                        | Skips committing the changes to repo                                                           |
+| verbose            | false       | false                                        | Whether or not to enable verbose logging for shell scripts                                     |
 
-<!-- ACTION-INPUT-LIST:END -->
+<!-- ACTION end -->

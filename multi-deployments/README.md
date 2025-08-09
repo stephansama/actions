@@ -58,18 +58,18 @@ jobs:
                   environments: ${{steps.generate.outputs.environments}}
 ```
 
-<!-- ACTION-INPUT-LIST:START -->
+<!-- ACTION start -->
 
-### ⚙️ Inputs
+### actions
 
-| Name                | Default           | Description                                                                     | Required |
-| ------------------- | ----------------- | ------------------------------------------------------------------------------- | -------- |
-| environments        | undefined         | Environments to deploy                                                          | true     |
-| invalidate_previous | false             | Invalidate previous deploys                                                     | false    |
-| ref                 | ${{github.ref}}   | Commit ref to reference for deploys (automatically uses Github CI environments) | false    |
-| token               | ${{github.token}} | GitHub token used to create octokit client                                      | true     |
+| 🏷️ Name             | ✅ Required | ⚙️ Default        | 📝 Description                                                                  |
+| ------------------- | ----------- | ----------------- | ------------------------------------------------------------------------------- |
+| environments        | true        | undefined         | Environments to deploy                                                          |
+| invalidate_previous | false       | false             | Invalidate previous deploys                                                     |
+| ref                 | false       | ${{github.ref}}   | Commit ref to reference for deploys (automatically uses Github CI environments) |
+| token               | true        | ${{github.token}} | GitHub token used to create octokit client                                      |
 
-<!-- ACTION-INPUT-LIST:END -->
+<!-- ACTION end -->
 
 ### **Example environments JSON**
 

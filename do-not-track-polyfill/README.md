@@ -48,15 +48,15 @@ You can also customize which flags are set (see below).
 
 ---
 
-<!-- ACTION-INPUT-LIST:START -->
+<!-- ACTION start -->
 
-### ⚙️ Inputs
+### actions
 
-| Name       | Default   | Description                             | Required |
-| ---------- | --------- | --------------------------------------- | -------- |
-| additional | undefined | Additional telemetry providers to block | false    |
+| 🏷️ Name    | ✅ Required | ⚙️ Default | 📝 Description                          |
+| ---------- | ----------- | ---------- | --------------------------------------- |
+| additional | false       | undefined  | Additional telemetry providers to block |
 
-<!-- ACTION-INPUT-LIST:END -->
+<!-- ACTION end -->
 
 ```yaml
 - uses: stephansama/actions/do-not-track-polyfill-action@v1
