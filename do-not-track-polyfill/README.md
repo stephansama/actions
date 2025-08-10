@@ -48,7 +48,7 @@ You can also customize which flags are set (see below).
 
 ---
 
-<!-- ACTION-INPUT-LIST:START -->
+<!-- ACTION start -->
 
 ### ⚙️ Inputs
 
@@ -56,7 +56,7 @@ You can also customize which flags are set (see below).
 | ---------- | --------- | --------------------------------------- | -------- |
 | additional | undefined | Additional telemetry providers to block | false    |
 
-<!-- ACTION-INPUT-LIST:END -->
+<!-- ACTION end -->
 
 ```yaml
 - uses: stephansama/actions/do-not-track-polyfill-action@v1

@@ -21,6 +21,7 @@
 		"@eslint/js": "^9.32.0",
 		"@eslint/json": "^0.13.1",
 		"@eslint/markdown": "^7.1.0",
+		"@stephansama/auto-readme": "^0.1.0",
 		"@stephansama/catppuccin-typedoc": "^1.0.0",
 		"@stephansama/github-env": "^0.1.0",
 		"@tsconfig/recommended": "^1.0.10",

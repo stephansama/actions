@@ -1,6 +1,7 @@
 # Generate Markdown from Action Inputs
 
-[![🧪 Test generate-md-action-inputs](https://github.com/stephansama/actions/actions/workflows/test-generate-md-action-input.yml/badge.svg)](https://github.com/stephansama/actions/actions/workflows/test-generate-md-action-input.yml)
+> [!CAUTION]
+> This package is deprecated please use the cli [`@stephansama/auto-readme`](https://github.com/stephansama/packages/tree/main/core/auto-readme) instead as it is more feature filled
 
 This GitHub Action automatically generates a Markdown table of your action's inputs and adds it to your `README.md`. It's a simple way to keep your documentation in sync with your `action.yml` file.
 
@@ -15,20 +16,20 @@ This GitHub Action automatically generates a Markdown table of your action's inp
 **Before:**
 
 ```markdown
-<!-- ACTION-INPUT-LIST:START -->
-<!-- ACTION-INPUT-LIST:END -->
+<!-- ACTION start -->
+<!-- ACTION end -->
 ```
 
 **After:**
 
 ```markdown
-<!-- ACTION-INPUT-LIST:START -->
+<!-- ACTION start -->
 
 | Name       | Default         | Description               | Required |
 | ---------- | --------------- | ------------------------- | -------- |
 | `my-input` | `default-value` | This is my amazing input. | `false`  |
 
-<!-- ACTION-INPUT-LIST:END -->
+<!-- ACTION end -->
 ```
 
 ## Usage
@@ -38,8 +39,8 @@ This GitHub Action automatically generates a Markdown table of your action's inp
     Add the following comment block to your `README.md` where you want the table of inputs to be generated:
 
     ```markdown
-    <!-- ACTION-INPUT-LIST:START -->
-    <!-- ACTION-INPUT-LIST:END -->
+    <!-- ACTION start -->
+    <!-- ACTION end -->
     ```
 
 2. **Create a workflow file:**
@@ -74,13 +75,13 @@ permissions:
     contents: write
 ```
 
-<!-- ACTION-INPUT-LIST:START -->
+<!-- ACTION start -->
 
 ### ⚙️ Inputs
 
 | Name               | Default                                      | Description                                                                                    | Required |
 | ------------------ | -------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------- |
-| comment_tag_name   | ACTION-INPUT-LIST                            | Prefix for delimiting block start and end                                                      | false    |
+| comment_tag_name   | ACTION                                       | Prefix for delimiting block start and end                                                      | false    |
 | commit_message     | Updated readme with the latest action inputs | Commit message used while committing to the repo                                               | false    |
 | committer_username | stephansama-bot                              | Username used while committing to the repo                                                     | false    |
 | committer_email    | <stephansama-bot@example.com>                | Email id used while committing to the repo                                                     | false    |
@@ -91,4 +92,4 @@ permissions:
 | skip_commit        | false                                        | Skips committing the changes to repo                                                           | false    |
 | verbose            | false                                        | Whether or not to enable verbose logging for shell scripts                                     | false    |
 
-<!-- ACTION-INPUT-LIST:END -->
+<!-- ACTION end -->

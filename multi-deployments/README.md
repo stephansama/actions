@@ -58,7 +58,7 @@ jobs:
                   environments: ${{steps.generate.outputs.environments}}
 ```
 
-<!-- ACTION-INPUT-LIST:START -->
+<!-- ACTION start -->
 
 ### ⚙️ Inputs
 
@@ -69,7 +69,7 @@ jobs:
 | ref                 | ${{github.ref}}   | Commit ref to reference for deploys (automatically uses Github CI environments) | false    |
 | token               | ${{github.token}} | GitHub token used to create octokit client                                      | true     |
 
-<!-- ACTION-INPUT-LIST:END -->
+<!-- ACTION end -->
 
 ### **Example environments JSON**
 
