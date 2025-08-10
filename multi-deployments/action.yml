@@ -3,6 +3,7 @@ author: Stephan Randle
 description: Create multiple deployments during one workflow
 inputs:
   environments:
+    default: "{}"
     description: Environments to deploy
     required: true
   invalidate_previous:

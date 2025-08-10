@@ -1,4 +1,5 @@
 #!/bin/sh
 
+auto-readme -g
 lint-staged --config .husky/.lintstagedrc.mjs
 vitest --changed HEAD~1
