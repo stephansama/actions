@@ -49,7 +49,7 @@ const mockFullReadmePaths = [
 	],
 ];
 
-const mockTags = module.buildCommentTags("ACTION-INPUT-LIST");
+const mockTags = module.buildCommentTags("ACTION");
 const mockReadme = md`
 # Heading
 
@@ -88,7 +88,7 @@ const mockActionData: module.ActionData = {
 };
 
 const mockInputData: module.Inputs = {
-	comment_tag_name: "ACTION-INPUT-LIST",
+	comment_tag_name: "ACTION",
 	commit_message: "update",
 	committer_email: "stephansama-bot@gmail.com",
 	committer_username: "stephansama-bot",

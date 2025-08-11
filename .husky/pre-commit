@@ -1,4 +1,5 @@
 #!/bin/sh
 
-lint-staged --config .husky/.lintstagedrc.mjs
-vitest --changed HEAD~1
+auto-readme -vg
+lint-staged -v
+vitest --changed HEAD~1 --run

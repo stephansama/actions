@@ -3,7 +3,7 @@ author: Stephan Randle
 description: Generate markdown table containing inputs from github action configuration
 inputs:
   comment_tag_name:
-    default: ACTION-INPUT-LIST
+    default: ACTION
     description: Prefix for delimiting block start and end
     required: false
   commit_message:
