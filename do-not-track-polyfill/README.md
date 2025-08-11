@@ -5,15 +5,15 @@
 
 A simple GitHub Action that conditionally disables telemetry by setting opt-out environment variables for several popular vendors. It ensures your workflow respects privacy-focused settings by preemptively opting out of analytics, usage reporting, and tracking features — if the relevant tools support them.
 
----
+***
 
 ## ✨ Features
 
-- Adds common telemetry-related environment variables
+* Adds common telemetry-related environment variables
   (e.g., `ASTRO_TELEMETRY_DISABLED`, etc.)
-- Helps opt out of analytics, error reporting, and tracking
+* Helps opt out of analytics, error reporting, and tracking
 
----
+***
 
 ## 🚀 Usage
 
@@ -33,20 +33,20 @@ jobs:
             - uses: stephansama/actions/do-not-track-polyfill@v1
 ```
 
----
+***
 
 ## 🌱 What It Does
 
 This action conditionally sets additionally environment
 variables to disable telemetry for popular platforms such as:
 
-- AstroJS
-- Storybook
-- Vercel
+* AstroJS
+* Storybook
+* Vercel
 
 You can also customize which flags are set (see below).
 
----
+***
 
 <!-- ACTION start -->
 
@@ -65,9 +65,9 @@ You can also customize which flags are set (see below).
      TEST=https://test.com
 ```
 
----
+***
 
 ## 🔒 Why Use This?
 
-- Allows you to turn on and off
-- Prevents telemetry from bloating CI logs or triggering network requests
+* Allows you to turn on and off
+* Prevents telemetry from bloating CI logs or triggering network requests

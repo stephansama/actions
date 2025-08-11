@@ -6,10 +6,10 @@ This GitHub Action simplifies the process of creating multiple GitHub Deployment
 
 ## **✨ Features**
 
-- **Batch Deployment Creation**: Create multiple deployments with a single action call.
-- **Environment Tracking**: Clearly define and track deployments for different environments.
-- **Previous Deployment Invalidation**: Optionally invalidate previous deployments for a cleaner deployment history.
-- **Customizable References**: Specify the commit reference for deployments, or let the action automatically use GitHub CI environment variables.
+* **Batch Deployment Creation**: Create multiple deployments with a single action call.
+* **Environment Tracking**: Clearly define and track deployments for different environments.
+* **Previous Deployment Invalidation**: Optionally invalidate previous deployments for a cleaner deployment history.
+* **Customizable References**: Specify the commit reference for deployments, or let the action automatically use GitHub CI environment variables.
 
 ## **🚀 Usage**
 
@@ -65,7 +65,7 @@ jobs:
 | Name                | Default           | Description                                                                     | Required |
 | ------------------- | ----------------- | ------------------------------------------------------------------------------- | -------- |
 | environments        | undefined         | Environments to deploy                                                          | true     |
-| invalidate_previous | false             | Invalidate previous deploys                                                     | false    |
+| invalidate\_previous | false             | Invalidate previous deploys                                                     | false    |
 | ref                 | ${{github.ref}}   | Commit ref to reference for deploys (automatically uses Github CI environments) | false    |
 | token               | ${{github.token}} | GitHub token used to create octokit client                                      | true     |
 
@@ -86,12 +86,12 @@ jobs:
 The action leverages the GitHub Deployments API to create and manage deployment records. For each environment provided in the environments input, it performs the following steps:
 
 1. **Creates a Deployment**: Initiates a new deployment record for the specified environment and commit reference.
-2. **Sets Deployment Status to "in_progress"**: Immediately updates the deployment status to indicate that the deployment process has started.
-3. **Sets Deployment Status to "success"**: Once all deployments are created, it updates their statuses to "success," including the environment_url (the URL you provided) and a log_url pointing back to the GitHub Actions workflow run for traceability.
+2. **Sets Deployment Status to "in\_progress"**: Immediately updates the deployment status to indicate that the deployment process has started.
+3. **Sets Deployment Status to "success"**: Once all deployments are created, it updates their statuses to "success," including the environment\_url (the URL you provided) and a log\_url pointing back to the GitHub Actions workflow run for traceability.
 
-The invalidate_previous input, when set to true, tells the action to mark any existing deployments for the given environments as inactive before creating the new ones, ensuring only the latest deployments are active.
+The invalidate\_previous input, when set to true, tells the action to mark any existing deployments for the given environments as inactive before creating the new ones, ensuring only the latest deployments are active.
 
 ### Inspired by
 
-- [bobheadxi/deployments](https://github.com/bobheadxi/deployments)
-- [maxgfr/github-multi-deployments](https://github.com/maxgfr/github-multi-deployments)
+* [bobheadxi/deployments](https://github.com/bobheadxi/deployments)
+* [maxgfr/github-multi-deployments](https://github.com/maxgfr/github-multi-deployments)
