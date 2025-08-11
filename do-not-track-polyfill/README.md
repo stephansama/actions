@@ -24,20 +24,20 @@ Add the action to your workflow **before** any steps that might invoke telemetry
 ```yaml
 name: do-not-track-polyfill example
 on:
-    workflow_dispatch:
+  workflow_dispatch:
 jobs:
-    example:
-        runs-on: ubuntu-latest
-        if: ${{github.event.workflow_run.conclusion != 'success'}}
-        steps:
-            - uses: stephansama/actions/do-not-track-polyfill@v1
+  example:
+    runs-on: ubuntu-latest
+    if: ${{github.event.workflow_run.conclusion != 'success'}}
+    steps:
+      - uses: stephansama/actions/do-not-track-polyfill@v1
 ```
 
 ***
 
 ## 🌱 What It Does
 
-This action conditionally sets additionally environment
+This action conditionally sets additional environment
 variables to disable telemetry for popular platforms such as:
 
 * AstroJS
