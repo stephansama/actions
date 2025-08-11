@@ -6,9 +6,11 @@
 		"dev": "turbo dev --filter=$(ls . | fzf)",
 		"lint": "eslint .",
 		"build": "turbo build",
+		"typedoc": "typedoc",
 		"test:ci": "vitest run --coverage",
 		"test:ui": "vitest --ui",
-		"typedoc": "typedoc",
+		"fmt:check": "prettier . --check",
+		"fmt:write": "prettier . --write",
 		"prepare": "husky"
 	},
 	"packageManager": "pnpm@10.13.1",

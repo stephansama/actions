@@ -24,38 +24,38 @@ This example demonstrates how to use the multi-deployments action to create prev
 ```yaml
 name: multi-deployments example
 on:
-    workflow_dispatch:
+  workflow_dispatch:
 permissions:
-    actions: read
-    contents: write
-    deployments: write
-    id-token: write
-    issues: write
-    pull-requests: write
-    statuses: write
+  actions: read
+  contents: write
+  deployments: write
+  id-token: write
+  issues: write
+  pull-requests: write
+  statuses: write
 jobs:
-    example:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-            - uses: pnpm/action-setup@v4
-            - uses: actions/setup-node@v4
-              with:
-                  cache: "pnpm"
-                  node-version-file: ".nvmrc"
-            - name: Installing dependencies
-              run: pnpm install
-            - name: Build all actions
-              run: pnpm run build
-            - name: This is where you create your environments
-              run: node ./scripts/generate-multi-urls.js
-              id: generate
-            - uses: stephansama/actions/multi-deployments@v1
-              env:
-                  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-              with:
-                  invalidate_previous: true
-                  environments: ${{steps.generate.outputs.environments}}
+  example:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: "pnpm"
+          node-version-file: ".nvmrc"
+      - name: Installing dependencies
+        run: pnpm install
+      - name: Build all actions
+        run: pnpm run build
+      - name: This is where you create your environments
+        run: node ./scripts/generate-multi-urls.js
+        id: generate
+      - uses: stephansama/actions/multi-deployments@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          invalidate_previous: true
+          environments: ${{steps.generate.outputs.environments}}
 ```
 
 <!-- ACTION start -->
@@ -75,9 +75,9 @@ jobs:
 
 ```json
 {
-	"my-staging-env": "https://staging.example.com",
-	"my-preview-env": "https://preview.example.com/pr-123",
-	"production-east": "https://prod-east.example.com"
+  "my-staging-env": "https://staging.example.com",
+  "my-preview-env": "https://preview.example.com/pr-123",
+  "production-east": "https://prod-east.example.com"
 }
 ```
 

@@ -2,3 +2,4 @@
 
 auto-readme -vg
 lint-staged -v
+vitest --changed HEAD~1 --run

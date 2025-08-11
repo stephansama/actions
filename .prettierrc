@@ -1,8 +1,11 @@
 {
-	"quoteProps": "consistent",
 	"semi": true,
-	"singleQuote": false,
 	"useTabs": true,
+	"quoteProps": "consistent",
+	"singleQuote": false,
+	"overrides": [
+		{ "files": ["*.md"], "options": { "tabWidth": 2, "useTabs": false } }
+	],
 	"plugins": [
 		"prettier-plugin-jsdoc",
 		"prettier-plugin-organize-imports",
