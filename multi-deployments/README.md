@@ -62,12 +62,12 @@ jobs:
 
 ### ⚙️ Inputs
 
-| Name                | Default           | Description                                                                     | Required |
-| ------------------- | ----------------- | ------------------------------------------------------------------------------- | -------- |
-| environments        | undefined         | Environments to deploy                                                          | true     |
-| invalidate\_previous | false             | Invalidate previous deploys                                                     | false    |
-| ref                 | ${{github.ref}}   | Commit ref to reference for deploys (automatically uses Github CI environments) | false    |
-| token               | ${{github.token}} | GitHub token used to create octokit client                                      | true     |
+| Name                | Default             | Description                                                                     | Required |
+| ------------------- | ------------------- | ------------------------------------------------------------------------------- | -------- |
+| environments        | undefined           | Environments to deploy                                                          | true     |
+| invalidate\_previous | false               | Invalidate previous deploys                                                     | false    |
+| ref                 | `${{github.ref}}`   | Commit ref to reference for deploys (automatically uses Github CI environments) | false    |
+| token               | `${{github.token}}` | GitHub token used to create octokit client                                      | true     |
 
 <!-- ACTION end -->
 

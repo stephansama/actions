@@ -1,0 +1,9 @@
+{
+	"$schema": "../node_modules/@stephansama/auto-readme/config/schema.json",
+	"headings": {
+		"ACTION": ["name", "required", "default", "description"],
+		"PKG": ["name", "version", "devDependency"],
+		"WORKSPACE": ["name", "description"],
+		"ZOD": []
+	}
+}
