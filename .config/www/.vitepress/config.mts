@@ -31,7 +31,7 @@ export default defineConfig({
 		},
 	},
 	outDir: "../../dist",
-	sitemap: { hostname: "https://packages.stephansama.info" },
+	sitemap: { hostname: "https://actions.stephansama.info" },
 	themeConfig: {
 		footer: {
 			copyright: `Copyright © ${year} - @stephansama`,
@@ -65,5 +65,5 @@ export default defineConfig({
 			},
 		],
 	},
-	title: "@stephansama packages",
+	title: "@stephansama actions",
 });

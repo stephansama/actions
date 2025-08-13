@@ -14,7 +14,7 @@ hero:
       link: /api
     - theme: alt
       text: GitHub
-      link: https://github.com/stephansama/packages
+      link: https://github.com/marketplace/actions/stephansama
 features:
   - title: Plug-and-Play
     details: Drop into any existing workflow with minimal configuration and instant results.
