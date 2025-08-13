@@ -20,7 +20,7 @@
 		"@commitlint/cli": "^19.8.1",
 		"@commitlint/config-conventional": "^19.8.1",
 		"@commitlint/types": "^19.8.1",
-		"@eslint/js": "^9.32.0",
+		"@eslint/js": "^9.33.0",
 		"@eslint/json": "^0.13.1",
 		"@eslint/markdown": "^7.1.0",
 		"@stephansama/auto-readme": "^0.1.0",
