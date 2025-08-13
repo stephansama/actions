@@ -5,7 +5,6 @@
 	"readme": "../../README.md",
 	"indexFormat": "htmlTable",
 	"useCodeBlocks": true,
-	"disableSources": true,
 	"excludeExternals": true,
 	"skipErrorChecking": true,
 	"jsDocCompatibility": true,
