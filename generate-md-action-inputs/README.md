@@ -52,27 +52,27 @@ This GitHub Action automatically generates a Markdown table of your action's inp
 ```yaml
 name: generate-md-action-inputs example
 on:
-    workflow_dispatch:
+  workflow_dispatch:
 permissions:
-    actions: write
-    contents: write
+  actions: write
+  contents: write
 jobs:
-    release:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
-            - uses: stephansama/actions/generate-md-action-inputs@v1
-              with:
-                  verbose: true
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - uses: stephansama/actions/generate-md-action-inputs@v1
+        with:
+          verbose: true
 ```
 
 ## Required permissions
 
 ```yaml
 permissions:
-    actions: write
-    contents: write
+  actions: write
+  contents: write
 ```
 
 <!-- ACTION start -->
@@ -85,7 +85,7 @@ permissions:
 | commit\_message     | Updated readme with the latest action inputs | Commit message used while committing to the repo                                               | false    |
 | committer\_username | stephansama-bot                              | Username used while committing to the repo                                                     | false    |
 | committer\_email    | <stephansama-bot@example.com>                | Email id used while committing to the repo                                                     | false    |
-| gh\_token           | ${{github.token}}                            | Github token scoped to current repo (need to have an environment variable set if not supplied) | false    |
+| gh\_token           | `${{github.token}}`                          | Github token scoped to current repo (need to have an environment variable set if not supplied) | false    |
 | git\_provider       | github                                       | Git Provider to base remote urls from. Supported values are 'github' and 'gitlab'.             | false    |
 | heading            | ⚙️ Inputs                                    | Heading for table                                                                              | false    |
 | heading\_level      | 3                                            | Heading level for table                                                                        | false    |

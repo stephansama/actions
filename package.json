@@ -6,6 +6,7 @@
 		"dev": "turbo dev --filter=$(ls . | fzf)",
 		"lint": "eslint .",
 		"build": "turbo build",
+		"build:www": "turbo build --filter=www",
 		"test:ci": "vitest run --coverage",
 		"test:ui": "vitest --ui",
 		"fmt:check": "prettier . --check",
