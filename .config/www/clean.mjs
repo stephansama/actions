@@ -23,5 +23,5 @@ for (const filepath of markdownPaths) {
 
 	const newFile = file.replace(foundQuery, foundQuery.replace("\\", ""));
 
-	fs.writeFileSync(filepath, newFile);
+	if (newFile !== file) await fsp.writeFile(filepath, newFile);
 }
