@@ -1,11 +1,7 @@
-import * as fs from "fs";
+import * as fs from "node:fs";
+import * as fsp from "node:fs/promises";
 
 const markdownPaths = fs.globSync("./api/**/*.md");
-
-const mdData = markdownPaths.map((markdown) => ({
-	path: markdown,
-	file: fs.readFileSync(markdown, { encoding: "utf8" }),
-}));
 
 const queries = [
 	"> \\[!NOTE]",
@@ -15,8 +11,9 @@ const queries = [
 	"> \\[!CAUTION]",
 ];
 
-for (const { path, file } of mdData) {
+for (const filepath of markdownPaths) {
 	let foundQuery = undefined;
+	const file = await fsp.readFile(filepath, { encoding: "utf8" });
 	const hasQuery = file.split("\n").some((line) => {
 		foundQuery = queries.find((query) => line.includes(query));
 		return foundQuery;
@@ -26,5 +23,5 @@ for (const { path, file } of mdData) {
 
 	const newFile = file.replace(foundQuery, foundQuery.replace("\\", ""));
 
-	fs.writeFileSync(path, newFile);
+	fs.writeFileSync(filepath, newFile);
 }
