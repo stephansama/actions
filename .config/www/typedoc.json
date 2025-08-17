@@ -3,7 +3,6 @@
 	"name": "@stephansama actions",
 	"plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme"],
 	"readme": "../../README.md",
-	"indexFormat": "htmlTable",
 	"useCodeBlocks": true,
 	"excludeExternals": true,
 	"skipErrorChecking": true,
