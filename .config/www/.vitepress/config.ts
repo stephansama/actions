@@ -2,15 +2,19 @@ import { defineConfig } from "vitepress";
 
 import typedocSidebar from "../api/typedoc-sidebar.json" with { type: "json" };
 
-const year = new Date().getFullYear();
-
-// https://vitepress.dev/reference/site-config
 export default defineConfig({
 	description:
 		"Documentation on how to use the mad professor suite of utilities",
 	head: [
-		// TODO: add opengraph images
 		["link", { href: "/favicon.svg", rel: "icon" }],
+		[
+			"meta",
+			{
+				content:
+					"https://og.madprofessorblog.org/api/foss/packages.png",
+				property: "og:image",
+			},
+		],
 	],
 	ignoreDeadLinks: true,
 	lastUpdated: true,
@@ -34,7 +38,7 @@ export default defineConfig({
 	sitemap: { hostname: "https://actions.stephansama.info" },
 	themeConfig: {
 		footer: {
-			copyright: `Copyright © ${year} - @stephansama`,
+			copyright: `Copyright © ${new Date().getFullYear()} - @stephansama`,
 			message: "Released under MIT license",
 		},
 		nav: [
