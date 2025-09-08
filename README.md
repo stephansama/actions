@@ -6,17 +6,13 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6.svg?logo=typescript&logoColor=white&labelColor=3178C6)](https://github.com/search?q=repo%3Astephansama%2Fnvim%20language%3ATypeScript&type=code)
 [![Turborepo](https://img.shields.io/badge/Turborepo-2.5.4-FF1E56.svg?logo=turborepo&logoColor=white&labelColor=FF1E56)](https://turborepo.com/)
 
-[![codecov](https://codecov.io/github/stephansama/packages/graph/badge.svg)](https://codecov.io/github/stephansama/packages)
-[![🦋 Changesets Release](https://github.com/stephansama/packages/actions/workflows/release.yml/badge.svg)](https://github.com/stephansama/packages/actions/workflows/release.yml)
-[![CodeQL](https://github.com/stephansama/packages/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/stephansama/packages/actions/workflows/github-code-scanning/codeql)
-
-Collection of open source [npm](https://www.npmjs.com/) packages
-
-</div>
-
 [![codecov](https://codecov.io/github/stephansama/actions/graph/badge.svg)](https://codecov.io/github/stephansama/actions)
 [![coverage](https://github.com/stephansama/actions/actions/workflows/coverage.yml/badge.svg)](https://github.com/stephansama/actions/actions/workflows/coverage.yml)
 [![release](https://github.com/stephansama/actions/actions/workflows/release.yml/badge.svg)](https://github.com/stephansama/actions/actions/workflows/release.yml)
+
+Collection of open source [github actions](https://docs.github.com/en/actions)
+
+</div>
 
 This repository houses a collection of reusable GitHub Actions developed by
 [Stephan Randle](https://github.com/stephansama). These actions are designed to
