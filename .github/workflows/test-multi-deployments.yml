@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           cache: "pnpm"
           node-version-file: ".nvmrc"
@@ -48,7 +48,7 @@ jobs:
         with:
           sparse-checkout: |
             .github/scripts
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
       - run: npm install @actions/core
       - run: node ./.github/scripts/generate-multi-urls.js
         id: generate
