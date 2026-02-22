@@ -1,16 +1,19 @@
 {
-	"private": true,
 	"name": "www",
+	"private": true,
 	"type": "module",
 	"scripts": {
-		"predev": "typedoc",
-		"dev": "vitepress dev",
-		"prebuild": "typedoc",
+		"prebuild": "pnpm run setup",
 		"build": "vitepress build",
-		"preview": "vitepress preview"
+		"predev": "pnpm run setup",
+		"dev": "vitepress dev",
+		"preview": "vitepress preview",
+		"setup": "sh ./setup.sh"
 	},
 	"dependencies": {
 		"@catppuccin/vitepress": "^0.1.2",
+		"@eslint/config-inspector": "^1.3.0",
+		"node-modules-inspector": "^1.2.0",
 		"typedoc": "^0.28.10",
 		"typedoc-plugin-markdown": "^4.8.1",
 		"typedoc-vitepress-theme": "^1.1.2",

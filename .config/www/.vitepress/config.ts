@@ -10,7 +10,7 @@ export default defineConfig({
 		[
 			"meta",
 			{
-				content: "https://og.madprofessorblog.org/api/foss/actions.png",
+				content: "https://og.stephansama.info/api/actions/og.png",
 				property: "og:image",
 			},
 		],
