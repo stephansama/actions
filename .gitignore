@@ -5,3 +5,6 @@ node_modules
 tmp
 **/.vitepress/cache
 .config/www/api
+.config/www/public/eslint
+.config/www/public/node_modules
+.config/www/public/healthcheck.json

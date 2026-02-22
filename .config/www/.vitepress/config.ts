@@ -2,6 +2,8 @@ import { defineConfig } from "vitepress";
 
 import typedocSidebar from "../api/typedoc-sidebar.json" with { type: "json" };
 
+const html = String.raw;
+
 export default defineConfig({
 	description:
 		"Documentation on how to use the mad professor suite of utilities",
@@ -10,7 +12,7 @@ export default defineConfig({
 		[
 			"meta",
 			{
-				content: "https://og.madprofessorblog.org/api/foss/actions.png",
+				content: "https://og.stephansama.info/api/actions/og.png",
 				property: "og:image",
 			},
 		],
@@ -33,7 +35,6 @@ export default defineConfig({
 			};
 		},
 	},
-	outDir: "../../dist",
 	sitemap: { hostname: "https://actions.stephansama.info" },
 	themeConfig: {
 		footer: {
@@ -41,6 +42,22 @@ export default defineConfig({
 			message: "Released under MIT license",
 		},
 		nav: [
+			{
+				link: "/eslint/",
+				target: "_self",
+				text: iconLink({
+					icon: { name: "eslint", pack: "logos" },
+					title: "Eslint",
+				}),
+			},
+			{
+				link: "/node_modules/",
+				target: "_self",
+				text: iconLink({
+					icon: { name: "nodejs-icon-alt", pack: "logos" },
+					title: "Node Modules",
+				}),
+			},
 			{
 				link: "https://madprofessorblog.org",
 				target: "_self",
@@ -52,7 +69,7 @@ export default defineConfig({
 		socialLinks: [
 			{
 				icon: "bluesky",
-				link: "https://bsky.app/profile/stephansama.bsky.social",
+				link: "https://bsky.app/profile/stephansama.info",
 			},
 			{
 				icon: "linkedin",
@@ -60,7 +77,7 @@ export default defineConfig({
 			},
 			{
 				icon: "npm",
-				link: "https://www.npmjs.com/~stephansama",
+				link: "https://www.npmx.dev/~stephansama",
 			},
 			{
 				icon: "github",
@@ -70,3 +87,16 @@ export default defineConfig({
 	},
 	title: "@stephansama actions",
 });
+
+function iconLink({
+	icon,
+	title,
+}: {
+	icon: { name: string; pack: string };
+	title: string;
+}) {
+	return html`<div style="display:flex;gap:4px;">
+		<img src="https://api.iconify.design/${icon.pack}:${icon.name}.svg" />
+		${title}
+	</div>`;
+}

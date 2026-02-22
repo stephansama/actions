@@ -9,6 +9,6 @@
 	"plugins": [
 		"prettier-plugin-jsdoc",
 		"prettier-plugin-organize-imports",
-		"prettier-plugin-sort-package-json"
+		"prettier-plugin-packagejson"
 	]
 }

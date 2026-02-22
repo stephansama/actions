@@ -1,5 +1,7 @@
 packages:
   - ./*
   - ./.config/*
+
 ignoredBuiltDependencies:
   - core-js-pure
+  - esbuild
