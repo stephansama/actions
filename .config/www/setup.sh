@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 
-./node_modules/.bin/typedoc
+pnpm exec typedoc
 
-./node_modules/.bin/eslint-config-inspector build --base /eslint --outDir public/eslint
+pnpm exec eslint-config-inspector build --base /eslint --outDir public/eslint
 
-./node_modules/.bin/node-modules-inspector build --base /node_modules --outDir public/node_modules
+pnpm exec node-modules-inspector build --base /node_modules --outDir public/node_modules
 
 node -e "console.log(JSON.stringify({message: Date.now()}))" >public/healthcheck.json
