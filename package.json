@@ -57,7 +57,7 @@
 		"prettier-plugin-jsdoc": "catalog:",
 		"prettier-plugin-organize-imports": "catalog:",
 		"prettier-plugin-packagejson": "catalog:",
-		"tsup": "catalog:",
+		"tsdown": "catalog:",
 		"turbo": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:",

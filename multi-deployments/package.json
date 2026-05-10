@@ -3,6 +3,6 @@
 	"type": "module",
 	"main": "./src/index.ts",
 	"scripts": {
-		"build": "tsup ./src/index.ts"
+		"build": "tsdown"
 	}
 }
