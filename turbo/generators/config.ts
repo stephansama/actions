@@ -10,7 +10,7 @@ export default function generator(plop: PlopTypes.NodePlopAPI) {
 			},
 			{
 				path: "{{ turbo.paths.root }}/{{ dashCase name }}/action.yml",
-				templateFile: "template/action.yml.hbs",
+				templateFile: "template/action.yml",
 				type: "add",
 			},
 			{
