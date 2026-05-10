@@ -3,7 +3,7 @@
 	"license": "MIT",
 	"type": "module",
 	"scripts": {
-		"build": "turbo build",
+		"build": "turbo build --filter='!www'",
 		"build:www": "turbo build --filter=www",
 		"dev": "turbo dev --filter=$(ls . | fzf)",
 		"fmt:check": "prettier . --check",
