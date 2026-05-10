@@ -14,10 +14,6 @@ export type TodoItem = {
 	text: string;
 };
 
-const SKIP_FILE_RE = /\.min\.[jt]sx?$/;
-const SKIP_PATH_PREFIXES = ["dist/", "build/", ".next/"];
-const ZERO_SHA = "0".repeat(40);
-
 export function loadInputs() {
 	const github_token = core.getInput("github_token", { required: true });
 	const keywordsRaw = core.getInput("keywords");
@@ -82,8 +78,8 @@ export function parseDiffHunk(
 function shouldSkipFile(filename: string, status: string, patch?: string): boolean {
 	if (status === "removed") return true;
 	if (!patch) return true;
-	if (SKIP_FILE_RE.test(filename)) return true;
-	if (SKIP_PATH_PREFIXES.some((prefix) => filename.startsWith(prefix))) return true;
+	if (/\.min\.[jt]sx?$/.test(filename)) return true;
+	if (["dist/", "build/", ".next/"].some((prefix) => filename.startsWith(prefix))) return true;
 	return false;
 }
 
@@ -207,7 +203,7 @@ export async function handlePush(
 ): Promise<void> {
 	const before = github.context.payload.before as string | undefined;
 
-	if (!before || before === ZERO_SHA) {
+	if (!before || before === "0".repeat(40)) {
 		core.warning("Skipping TODO issue creation: initial push has no base commit to diff against.");
 		return;
 	}
