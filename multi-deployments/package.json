@@ -1,7 +1,11 @@
 {
 	"name": "multi-deployments",
+	"type": "module",
+	"main": "./src/index.ts",
 	"scripts": {
-		"build": "tsup ./src/index.ts"
+		"build": "tsdown"
 	},
-	"main": "./src/index.ts"
+	"engines": {
+		"node": ">=24"
+	}
 }

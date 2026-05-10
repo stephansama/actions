@@ -2,6 +2,38 @@ import type { PlopTypes } from "@turbo/gen";
 
 export default function generator(plop: PlopTypes.NodePlopAPI) {
 	plop.setGenerator("action", {
+		actions: [
+			{
+				path: "{{ turbo.paths.root }}/{{ dashCase name }}/package.json",
+				templateFile: "template/package.json.hbs",
+				type: "add",
+			},
+			{
+				path: "{{ turbo.paths.root }}/{{ dashCase name }}/action.yml",
+				templateFile: "template/action.yml",
+				type: "add",
+			},
+			{
+				path: "{{ turbo.paths.root }}/{{ dashCase name }}/README.md",
+				templateFile: "template/README.md.hbs",
+				type: "add",
+			},
+			{
+				path: "{{ turbo.paths.root }}/{{ dashCase name }}/src/index.ts",
+				templateFile: "template/BLANK",
+				type: "add",
+			},
+			{
+				path: "{{ turbo.paths.root }}/.github/workflows/examples/example-{{ dashCase name }}.yml",
+				templateFile: "./template/workflow-example.yml.hbs",
+				type: "add",
+			},
+			{
+				path: "{{ turbo.paths.root }}/.github/workflows/test-{{ dashCase name }}.yml",
+				templateFile: "./template/workflow-test.yml.hbs",
+				type: "add",
+			},
+		],
 		description: "Generate a new action",
 		prompts: [
 			{
@@ -25,38 +57,6 @@ export default function generator(plop: PlopTypes.NodePlopAPI) {
 				message: "What is the description of the new package?",
 				name: "description",
 				type: "input",
-			},
-		],
-		actions: [
-			{
-				path: "{{ turbo.paths.root }}/{{ dashCase name }}/package.json",
-				templateFile: "template/package.json.hbs",
-				type: "add",
-			},
-			{
-				path: "{{ turbo.paths.root }}/{{ dashCase name }}/action.yml",
-				templateFile: "template/action.yml.hbs",
-				type: "add",
-			},
-			{
-				path: "{{ turbo.paths.root }}/{{ dashCase name }}/README.md",
-				templateFile: "template/README.md.hbs",
-				type: "add",
-			},
-			{
-				path: "{{ turbo.paths.root }}/{{ dashCase name }}/src/index.ts",
-				templateFile: "template/BLANK",
-				type: "add",
-			},
-			{
-				path: "{{ turbo.paths.root }}/.github/workflows/examples/example-{{ dashCase name }}.yml",
-				templateFile: "./template/workflow-example.yml.hbs",
-				type: "add",
-			},
-			{
-				path: "{{ turbo.paths.root }}/.github/workflows/test-{{ dashCase name }}.yml",
-				templateFile: "./template/workflow-test.yml.hbs",
-				type: "add",
 			},
 		],
 	});

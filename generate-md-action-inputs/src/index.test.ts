@@ -11,8 +11,8 @@ const mocks = vi.hoisted(() => ({
 	getBooleanInput: vi.fn(),
 	getInput: vi.fn(),
 	readFile: vi.fn(),
-	writeFile: vi.fn(),
 	sh: vi.fn(),
+	writeFile: vi.fn(),
 }));
 
 vi.mock("@actions/core", () => ({
@@ -81,10 +81,10 @@ inputs:
 `;
 
 const mockActionData: module.ActionData = {
-	readme: mockReadme,
 	actionPath: "/Users/stephansama-bot/Code/actions/action.yml",
-	readmePath: "/Users/stephansama-bot/Code/actions/README.md",
 	data: { inputs: {} },
+	readme: mockReadme,
+	readmePath: "/Users/stephansama-bot/Code/actions/README.md",
 };
 
 const mockInputData: module.Inputs = {
@@ -227,8 +227,8 @@ describe("createHeading", () => {
 		"creates the heading with the proper level (defaulting when out of range)",
 		(heading_level, prefix) => {
 			const expected = prefix + " " + mockInputData.heading;
-			const opts = { ...mockInputData, heading_level };
-			expect(module.createHeading(opts)).toBe(expected);
+			const options = { ...mockInputData, heading_level };
+			expect(module.createHeading(options)).toBe(expected);
 		},
 	);
 });
@@ -347,8 +347,8 @@ describe("commitReadmes", () => {
 });
 
 describe("setupGit", () => {
-	it("sets up git", () => {
-		module.setupGit(mockInputData);
+	it("sets up git", async () => {
+		await module.setupGit(mockInputData);
 		expect(mocks.sh).toHaveBeenCalled();
 	});
 });
@@ -408,15 +408,15 @@ describe("getActionsPaths", () => {
 
 describe("writeActionsData", () => {
 	it("returns false when there are no inputs", async () => {
-		const writeCb = module.writeActionsData(mockInputData, mockTags);
-		const result = await writeCb({ ...mockActionData, data: {} });
+		const writeCallback = module.writeActionsData(mockInputData, mockTags);
+		const result = await writeCallback({ ...mockActionData, data: {} });
 		expect(result).toBe("false");
 	});
 
 	it("throws an error when there is no readme to update", async () => {
-		const writeCb = module.writeActionsData(mockInputData, mockTags);
-		expect(
-			async () => await writeCb({ ...mockActionData, readme: "" }),
+		const writeCallback = module.writeActionsData(mockInputData, mockTags);
+		await expect(
+			async () => await writeCallback({ ...mockActionData, readme: "" }),
 		).rejects.toThrow();
 	});
 });
@@ -436,8 +436,8 @@ describe("loadInputs", () => {
 		);
 
 		const result = module.loadInputs();
-		for (const [name, val] of Object.entries(result)) {
-			expect(result[name as keyof typeof mockInputData]).toBe(val);
+		for (const [name, value] of Object.entries(result)) {
+			expect(result[name as keyof typeof mockInputData]).toBe(value);
 		}
 	});
 });

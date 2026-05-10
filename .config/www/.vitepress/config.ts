@@ -5,8 +5,7 @@ import typedocSidebar from "../api/typedoc-sidebar.json" with { type: "json" };
 const html = String.raw;
 
 export default defineConfig({
-	description:
-		"Documentation on how to use the mad professor suite of utilities",
+	description: `Documentation on how to use the mad professor suite of utilities`,
 	head: [
 		["link", { href: "/favicon.svg", rel: "icon" }],
 		[
@@ -25,13 +24,19 @@ export default defineConfig({
 			const defaultCodeInline = md.renderer.rules.code_inline!;
 			md.renderer.rules.code_inline = (
 				tokens,
-				idx,
+				index,
 				options,
-				env,
+				environment,
 				self,
 			) => {
-				tokens[idx].attrSet("v-pre", "");
-				return defaultCodeInline(tokens, idx, options, env, self);
+				tokens[index].attrSet("v-pre", "");
+				return defaultCodeInline(
+					tokens,
+					index,
+					options,
+					environment,
+					self,
+				);
 			};
 		},
 	},

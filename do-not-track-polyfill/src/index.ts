@@ -1,18 +1,16 @@
 import * as core from "@actions/core";
-import dotenvx from "@dotenvx/dotenvx";
+import * as dotenvx from "@dotenvx/dotenvx";
 
 if (["1", "true"].includes(process.env.DO_NOT_TRACK || "")) {
-	const additionalEnv = parseAdditionalEnvironments();
-	const telemetryEnvs = getTelemetryEnvironments();
-	const environments = [additionalEnv, telemetryEnvs].flatMap(Object.entries);
+	const additionalEnvironment = parseAdditionalEnvironments();
+	const telemetryEnvironments = getTelemetryEnvironments();
+	const environments = [additionalEnvironment, telemetryEnvironments].flatMap(
+		(item) => Object.entries(item),
+	);
 
-	for (const [name, val] of environments) {
-		core.exportVariable(name, val);
+	for (const [name, value] of environments) {
+		core.exportVariable(name, value);
 	}
-}
-
-export function parseAdditionalEnvironments(): dotenvx.DotenvParseOutput {
-	return dotenvx.parse(core.getInput("additional") || "");
 }
 
 export function getTelemetryEnvironments() {
@@ -24,5 +22,9 @@ export function getTelemetryEnvironments() {
 		TURBO_TELEMETRY_DISABLED: 1,
 		VERCEL_TELEMETRY_DISABLED: 1,
 		WRANGLER_SEND_METRICS: false,
-	};
+	} as const;
+}
+
+export function parseAdditionalEnvironments(): dotenvx.DotenvParseOutput {
+	return dotenvx.parse(core.getInput("additional") || "");
 }

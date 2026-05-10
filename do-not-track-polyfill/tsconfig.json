@@ -1,6 +1,8 @@
 {
-	"extends": "../tsconfig.json",
+	"extends": "../tsconfig.base.json",
+	"include": ["src"],
 	"compilerOptions": {
-		"types": ["./src/env.d.ts", "@stephansama/github-env"]
+		"composite": true,
+		"types": ["./src/environment.d.ts", "@stephansama/types-github-action-env"]
 	}
 }

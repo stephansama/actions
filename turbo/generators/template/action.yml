@@ -1,0 +1,7 @@
+# prettier-ignore
+name: {{ name }}
+# prettier-ignore
+description: {{ description }}
+runs:
+  using: node20
+  main: ./dist/index.mjs

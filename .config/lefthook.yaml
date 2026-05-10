@@ -1,0 +1,13 @@
+prepare-commit-msg:
+  jobs:
+    - run: ai-commit-msg -o {1}
+commit-msg:
+  jobs:
+    - run: pnpm dlx commitlint --config .config/.commitlintrc.ts --edit {1}
+pre-commit:
+  parallel: false
+  jobs:
+    - run: auto-readme -vg
+      name: Update README
+    - run: nano-staged -c ./.nanostagedrc.mjs -v
+      name: Lint staged
