@@ -65,9 +65,7 @@ describe("multi-deployments", () => {
 
 			mocks.createDeployment.mockReturnValue({ data: { id: 10 } });
 
-			await expect(
-				async () => await module.run(),
-			).resolves.not.toThrowError();
+			await expect(module.run()).resolves.not.toThrowError();
 		});
 	});
 
