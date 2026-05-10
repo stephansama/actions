@@ -2,6 +2,7 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { markdownTable } from "markdown-table";
 import * as url from "node:url";
+import { parseSync } from "oxc-parser";
 
 const argv = process.argv.at(1);
 
@@ -73,6 +74,74 @@ export function parseDiffHunk(
 	}
 
 	return items;
+}
+
+export function isJsOrTs(filename: string): boolean {
+	return /\.[cm]?[jt]sx?$/.test(filename);
+}
+
+export function getAddedLines(patch: string): Set<number> {
+	const addedLines = new Set<number>();
+	const hunkHeaderRe = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
+	let currentNewLine = 0;
+	for (const line of patch.split("\n")) {
+		const hunkMatch = hunkHeaderRe.exec(line);
+		if (hunkMatch) {
+			currentNewLine = parseInt(hunkMatch[1]!, 10) - 1;
+			continue;
+		}
+		if (line.startsWith("-")) continue;
+		if (line.startsWith(" ")) {
+			currentNewLine++;
+			continue;
+		}
+		if (line.startsWith("+")) {
+			currentNewLine++;
+			addedLines.add(currentNewLine);
+		}
+	}
+	return addedLines;
+}
+
+export async function fetchFileContent(
+	octokit: ReturnType<typeof github.getOctokit>,
+	owner: string,
+	repo: string,
+	path: string,
+	ref: string,
+): Promise<string> {
+	const { data } = await octokit.rest.repos.getContent({ owner, repo, path, ref });
+	if (Array.isArray(data) || data.type !== "file") return "";
+	return Buffer.from(data.content, "base64").toString("utf-8");
+}
+
+export function extractTodosWithOxc(
+	content: string,
+	filename: string,
+	addedLines: Set<number>,
+	keywords: string[],
+): TodoItem[] {
+	const { comments } = parseSync(filename, content, { sourceType: "module" });
+	const todos: TodoItem[] = [];
+	for (const comment of comments) {
+		const lineNumber = content.slice(0, comment.start).split("\n").length;
+		if (!addedLines.has(lineNumber)) continue;
+		const text = comment.value.trimStart();
+		for (const keyword of keywords) {
+			const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			const m = new RegExp(`^${escaped}(?::|(?=\\s)|$)(.*)`, "i").exec(text);
+			if (m) {
+				todos.push({
+					file: filename,
+					lineNumber,
+					keyword: keyword.toUpperCase(),
+					text: m[1]?.trim() ?? "",
+				});
+				break;
+			}
+		}
+	}
+	return todos;
 }
 
 function shouldSkipFile(filename: string, status: string, patch?: string): boolean {
@@ -178,6 +247,8 @@ export async function handlePullRequest(
 		);
 	}
 
+	const headSha = github.context.payload.pull_request!.head.sha as string;
+
 	const files = await octokit.paginate(octokit.rest.pulls.listFiles, {
 		owner,
 		repo,
@@ -187,7 +258,14 @@ export async function handlePullRequest(
 	const todos: TodoItem[] = [];
 	for (const file of files) {
 		if (shouldSkipFile(file.filename, file.status, file.patch)) continue;
-		todos.push(...parseDiffHunk(file.patch!, file.filename, regex));
+		const addedLines = getAddedLines(file.patch!);
+		if (addedLines.size === 0) continue;
+		if (isJsOrTs(file.filename)) {
+			const content = await fetchFileContent(octokit, owner, repo, file.filename, headSha);
+			todos.push(...extractTodosWithOxc(content, file.filename, addedLines, inputs.keywords));
+		} else {
+			todos.push(...parseDiffHunk(file.patch!, file.filename, regex));
+		}
 	}
 
 	const body = buildPrCommentBody(todos, inputs.comment_marker);
@@ -218,7 +296,14 @@ export async function handlePush(
 	const todos: TodoItem[] = [];
 	for (const file of comparison.files ?? []) {
 		if (shouldSkipFile(file.filename, file.status, file.patch)) continue;
-		todos.push(...parseDiffHunk(file.patch!, file.filename, regex));
+		const addedLines = getAddedLines(file.patch!);
+		if (addedLines.size === 0) continue;
+		if (isJsOrTs(file.filename)) {
+			const content = await fetchFileContent(octokit, owner, repo, file.filename, github.context.sha);
+			todos.push(...extractTodosWithOxc(content, file.filename, addedLines, inputs.keywords));
+		} else {
+			todos.push(...parseDiffHunk(file.patch!, file.filename, regex));
+		}
 	}
 
 	if (!inputs.create_issues) {

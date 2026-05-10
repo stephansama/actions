@@ -6,7 +6,8 @@
 		"build": "tsdown"
 	},
 	"devDependencies": {
-		"markdown-table": "catalog:"
+		"markdown-table": "catalog:",
+		"oxc-parser": "catalog:"
 	},
 	"engines": {
 		"node": ">=24"
