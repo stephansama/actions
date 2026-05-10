@@ -1,5 +1,6 @@
-import dotenvx from "@dotenvx/dotenvx";
+import * as dotenvx from "@dotenvx/dotenvx";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { getTelemetryEnvironments } from "./index";
 
 const mocks = vi.hoisted(() => ({
@@ -14,7 +15,7 @@ vi.mock("@actions/core", () => ({
 	getInput: mocks.getInput,
 }));
 
-const defaultEnvs = getTelemetryEnvironments();
+const defaultEnvironments = getTelemetryEnvironments();
 
 describe("do-not-track-polyfill", () => {
 	beforeEach(() => {
@@ -29,8 +30,8 @@ describe("do-not-track-polyfill", () => {
 		it("enables default environment variables", async () => {
 			await import("./index");
 
-			for (const [key, val] of Object.entries(defaultEnvs)) {
-				expect(mocks.exportVariable).toHaveBeenCalledWith(key, val);
+			for (const [key, value] of Object.entries(defaultEnvironments)) {
+				expect(mocks.exportVariable).toHaveBeenCalledWith(key, value);
 			}
 		});
 
@@ -41,7 +42,7 @@ ADDITIONAL_TELEMETRY=1
 SPY_ON_ME=false
 `;
 
-			const parsedEnv = dotenvx.parse(mockGetInput);
+			const parsedEnvironment = dotenvx.parse(mockGetInput);
 
 			mocks.getInput.mockReturnValue(mockGetInput);
 
@@ -49,12 +50,13 @@ SPY_ON_ME=false
 
 			expect(mocks.getInput).toHaveBeenCalled();
 
-			for (const [key, val] of Object.entries(parsedEnv)) {
-				expect(mocks.exportVariable).toHaveBeenCalledWith(key, val);
+			for (const [key, value] of Object.entries(parsedEnvironment)) {
+				expect(mocks.exportVariable).toHaveBeenCalledWith(key, value);
 			}
 
 			const times =
-				Object.keys(parsedEnv).length + Object.keys(defaultEnvs).length;
+				Object.keys(parsedEnvironment).length +
+				Object.keys(defaultEnvironments).length;
 
 			expect(mocks.exportVariable).toHaveBeenCalledTimes(times);
 		});
@@ -62,7 +64,7 @@ SPY_ON_ME=false
 		it("does not enable additional environment variables when not supplied", async () => {
 			await import("./index");
 
-			const times = Object.keys(defaultEnvs).length;
+			const times = Object.keys(defaultEnvironments).length;
 
 			expect(mocks.exportVariable).toHaveBeenCalledTimes(times);
 			expect(mocks.getInput).toHaveBeenCalled();

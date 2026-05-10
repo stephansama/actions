@@ -1,12 +1,16 @@
 {
 	"name": "generate-md-action-inputs",
+	"type": "module",
+	"main": "./src/index.ts",
 	"scripts": {
 		"build": "tsup ./src/index.ts"
 	},
-	"main": "./src/index.ts",
 	"devDependencies": {
-		"markdown-table": "^3.0.4",
-		"yaml": "^2.8.0",
-		"zx": "^8.7.2"
+		"markdown-table": "catalog:",
+		"yaml": "catalog:",
+		"zx": "catalog:"
+	},
+	"engines": {
+		"node": ">=24"
 	}
 }

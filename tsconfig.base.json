@@ -1,0 +1,11 @@
+{
+	"extends": "@tsconfig/recommended/tsconfig.json",
+	"compilerOptions": {
+		"resolveJsonModule": true,
+		"module": "preserve",
+		"target": "esnext",
+		"moduleResolution": "bundler",
+		"types": ["@stephansama/types-github-action-env"],
+		"lib": ["ESNext"]
+	}
+}

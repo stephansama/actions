@@ -1,48 +1,17 @@
-import js from "@eslint/js";
-import json from "@eslint/json";
-import markdown from "@eslint/markdown";
-import gitignore from "eslint-config-flat-gitignore";
-import { defineConfig } from "eslint/config";
-import globals from "globals";
-import tseslint from "typescript-eslint";
+import { config, presets } from "@stephansama/eslint-config";
 
-export default defineConfig([
-	{
-		files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
-		plugins: { js },
-		extends: ["js/recommended"],
-		languageOptions: { globals: globals.node },
-	},
-	// @ts-expect-error https://github.com/typescript-eslint/typescript-eslint/issues/10899
-	tseslint.configs.recommended,
-	gitignore(),
-	{
-		rules: {
-			"no-console": ["warn", { allow: ["warn", "error", "info"] }],
+import pkg from "./package.json";
+
+export default await config({
+	...presets.base,
+	markdown: true,
+	node: { allowModules: Object.keys(pkg?.devDependencies) },
+	overrides: [
+		{
+			rules: {
+				"markdown/no-missing-label-refs": "off",
+				"n/no-unpublished-import": "off",
+			},
 		},
-	},
-	{
-		files: ["**/*.json"],
-		plugins: { json },
-		language: "json/json",
-		extends: ["json/recommended"],
-	},
-	{
-		files: ["**/*.jsonc"],
-		plugins: { json },
-		language: "json/jsonc",
-		extends: ["json/recommended"],
-	},
-	{
-		files: ["**/*.json5"],
-		plugins: { json },
-		language: "json/json5",
-		extends: ["json/recommended"],
-	},
-	{
-		files: ["**/*.md"],
-		plugins: { markdown },
-		language: "markdown/gfm",
-		extends: ["markdown/recommended"],
-	},
-]);
+	],
+});

@@ -2,31 +2,6 @@ import type { PlopTypes } from "@turbo/gen";
 
 export default function generator(plop: PlopTypes.NodePlopAPI) {
 	plop.setGenerator("action", {
-		description: "Generate a new action",
-		prompts: [
-			{
-				message: "What is the name of the new action?",
-				name: "name",
-				type: "input",
-				validate(input: string) {
-					if (input.includes(".")) {
-						return "action name cannot include an extension";
-					}
-					if (input.includes(" ")) {
-						return "action name cannot include spaces";
-					}
-					if (!input) {
-						return "action name is required";
-					}
-					return true;
-				},
-			},
-			{
-				message: "What is the description of the new package?",
-				name: "description",
-				type: "input",
-			},
-		],
 		actions: [
 			{
 				path: "{{ turbo.paths.root }}/{{ dashCase name }}/package.json",
@@ -57,6 +32,31 @@ export default function generator(plop: PlopTypes.NodePlopAPI) {
 				path: "{{ turbo.paths.root }}/.github/workflows/test-{{ dashCase name }}.yml",
 				templateFile: "./template/workflow-test.yml.hbs",
 				type: "add",
+			},
+		],
+		description: "Generate a new action",
+		prompts: [
+			{
+				message: "What is the name of the new action?",
+				name: "name",
+				type: "input",
+				validate(input: string) {
+					if (input.includes(".")) {
+						return "action name cannot include an extension";
+					}
+					if (input.includes(" ")) {
+						return "action name cannot include spaces";
+					}
+					if (!input) {
+						return "action name is required";
+					}
+					return true;
+				},
+			},
+			{
+				message: "What is the description of the new package?",
+				name: "description",
+				type: "input",
 			},
 		],
 	});

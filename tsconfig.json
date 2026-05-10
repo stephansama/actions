@@ -1,7 +1,9 @@
 {
-	"extends": "@tsconfig/recommended/tsconfig.json",
-	"compilerOptions": {
-		"types": ["@stephansama/github-env"],
-		"lib": ["ESNext"]
-	}
+	"references": [
+		{ "path": "./tsconfig.root.json" },
+		{ "path": "./.config/www/tsconfig.json" },
+		{ "path": "./do-not-track-polyfill/tsconfig.json" },
+		{ "path": "./generate-md-action-inputs/tsconfig.json" },
+		{ "path": "./multi-deployments/tsconfig.json" }
+	]
 }

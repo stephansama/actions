@@ -8,15 +8,19 @@
 		"predev": "pnpm run setup",
 		"dev": "vitepress dev",
 		"preview": "vitepress preview",
-		"setup": "sh ./setup.sh"
+		"setup": "pnpm run --sequential \"/^setup:.*/\"",
+		"setup:eslint-config-inspector": "eslint-config-inspector build --base /eslint --outDir public/eslint",
+		"setup:healthcheck": "node -e \"console.log(JSON.stringify({message: Date.now()}))\" >public/healthcheck.json",
+		"setup:node-modules-inspector": "node-modules-inspector build --base /node_modules --outDir public/node_modules",
+		"setup:typedoc": "typedoc"
 	},
 	"dependencies": {
-		"@catppuccin/vitepress": "^0.1.2",
-		"@eslint/config-inspector": "^1.3.0",
-		"node-modules-inspector": "^1.2.0",
-		"typedoc": "^0.28.10",
-		"typedoc-plugin-markdown": "^4.8.1",
-		"typedoc-vitepress-theme": "^1.1.2",
-		"vitepress": "^1.6.4"
+		"@catppuccin/vitepress": "catalog:",
+		"@eslint/config-inspector": "catalog:",
+		"node-modules-inspector": "catalog:",
+		"typedoc": "catalog:",
+		"typedoc-plugin-markdown": "catalog:",
+		"typedoc-vitepress-theme": "catalog:",
+		"vitepress": "catalog:"
 	}
 }

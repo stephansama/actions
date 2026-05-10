@@ -1,10 +1,14 @@
 {
 	"name": "do-not-track-polyfill",
+	"type": "module",
+	"main": "./src/index.ts",
 	"scripts": {
 		"build": "tsup src/index.ts"
 	},
-	"main": "./src/index.ts",
 	"devDependencies": {
-		"@dotenvx/dotenvx": "^1.48.4"
+		"@dotenvx/dotenvx": "catalog:"
+	},
+	"engines": {
+		"node": ">=24"
 	}
 }

@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import * as module from "./index";
 
 const mocks = vi.hoisted(() => ({
 	createDeployment: vi.fn(),
 	createDeploymentStatus: vi.fn(),
 	getInput: vi.fn(),
-	isInvoked: vi.fn(),
 	getOctokit: vi.fn(() => ({
 		rest: {
 			repos: {
@@ -14,20 +14,21 @@ const mocks = vi.hoisted(() => ({
 			},
 		},
 	})),
+	isInvoked: vi.fn(),
 }));
 
 vi.mock("@actions/core", () => ({
-	getInput: mocks.getInput,
 	getBooleanInput: vi.fn(
 		(input: string) =>
 			input === "invalidate_previous" && mocks.getInput(input) === "true",
 	),
+	getInput: mocks.getInput,
 }));
 
 vi.mock("@actions/github", () => ({
 	context: {
-		sha: "f3fb078cbfe3342f5032d5abb9260080e2f89d9d6ce6647c20bc23842fa0a0e7",
 		repo: { owner: "stephansama", repo: "actions" },
+		sha: "f3fb078cbfe3342f5032d5abb9260080e2f89d9d6ce6647c20bc23842fa0a0e7",
 	},
 	getOctokit: mocks.getOctokit,
 }));
@@ -64,7 +65,9 @@ describe("multi-deployments", () => {
 
 			mocks.createDeployment.mockReturnValue({ data: { id: 10 } });
 
-			expect(() => module.run()).not.toThrowError();
+			await expect(
+				async () => await module.run(),
+			).resolves.not.toThrowError();
 		});
 	});
 
@@ -75,10 +78,10 @@ describe("multi-deployments", () => {
 
 		it("returns the formatted values with only environments supplied", () => {
 			const mockEnvironments = { ["test - 1"]: "https://www.google.com" };
-			const mockEnvironmentsStr = JSON.stringify(mockEnvironments);
+			const mockEnvironmentsString = JSON.stringify(mockEnvironments);
 
 			mocks.getInput.mockImplementation((input: string) =>
-				input === "environments" ? mockEnvironmentsStr : "",
+				input === "environments" ? mockEnvironmentsString : "",
 			);
 
 			const { auto_inactive, environments } = module.loadInputs();
@@ -89,12 +92,12 @@ describe("multi-deployments", () => {
 
 		it("allows overriding of auto_inactive", () => {
 			const mockEnvironments = { ["test - 1"]: "https://www.google.com" };
-			const mockEnvironmentsStr = JSON.stringify(mockEnvironments);
+			const mockEnvironmentsString = JSON.stringify(mockEnvironments);
 			const mockInvalidatePrevious = "true";
 
 			mocks.getInput.mockImplementation((input: string) =>
 				input === "environments"
-					? mockEnvironmentsStr
+					? mockEnvironmentsString
 					: mockInvalidatePrevious,
 			);
 
@@ -120,15 +123,15 @@ describe("multi-deployments", () => {
 		});
 
 		it("returns the environments and urls properly", () => {
-			const envKey = "test-1";
-			const envUrl = "https://www.google.com";
-			const environments = { [envKey]: envUrl };
-			const envEntries = Object.entries(environments);
+			const environmentKey = "test-1";
+			const environmentUrl = "https://www.google.com";
+			const environments = { [environmentKey]: environmentUrl };
+			const environmentEntries = Object.entries(environments);
 
-			const { envs, urls } = module.parseEnvironments(envEntries);
+			const { envs, urls } = module.parseEnvironments(environmentEntries);
 
-			expect(envs).toContain(envKey);
-			expect(urls).toContain(envUrl);
+			expect(envs).toContain(environmentKey);
+			expect(urls).toContain(environmentUrl);
 		});
 	});
 });

@@ -1,7 +1,48 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 
-if (require.main === module) run();
+if (require.main === module) await run();
+
+export function loadInputs() {
+	const inputEnvironments = core.getInput("environments");
+	const token = core.getInput("token");
+	const ref = core.getInput("ref");
+
+	if (!inputEnvironments) {
+		throw new Error(
+			"please provide a JSON object containing the target environments to deploy. with the keys being the environment name and the values being the deployment url",
+		);
+	}
+
+	const parsedEnvironments = JSON.parse(inputEnvironments) as Record<
+		string,
+		string
+	>;
+
+	const environments = Object.entries<string>(parsedEnvironments);
+
+	const auto_inactive = core.getBooleanInput("invalidate_previous");
+
+	return {
+		auto_inactive,
+		environments,
+		ref,
+		token,
+	};
+}
+
+export function parseEnvironments(environments: [string, string][]) {
+	const environments_ = environments
+		.map(([environment]) => environment)
+		.filter(Boolean);
+	const urls = environments.map(([, url]) => url).filter(Boolean);
+
+	if (environments_.length !== urls.length) {
+		throw new Error("the length of environments do not match the urls");
+	}
+
+	return { envs: environments_, urls };
+}
 
 export async function run() {
 	const { auto_inactive, environments, ref, token } = loadInputs();
@@ -40,51 +81,15 @@ export async function run() {
 	const log_url = `https://github.com/${owner}/${repo}/commit/${github.context.sha}/checks`;
 
 	await Promise.all(
-		deploymentData.map(async (dep, i) =>
+		deploymentData.map(async (dep, index) =>
 			octokit.rest.repos.createDeploymentStatus({
 				...commonProps,
 				deployment_id: "id" in dep.data ? dep.data.id : 0,
-				environment_url: urls[i],
+				environment_url: urls[index],
 				log_url,
 				ref,
 				state: "success",
 			}),
 		),
 	);
-}
-
-export function parseEnvironments(environments: [string, string][]) {
-	const envs = environments.map(([env]) => env).filter(Boolean);
-	const urls = environments.map(([, url]) => url).filter(Boolean);
-
-	if (envs.length !== urls.length) {
-		throw new Error("the length of environments do not match the urls");
-	}
-
-	return { envs, urls };
-}
-
-export function loadInputs() {
-	const inputEnvironments = core.getInput("environments");
-	const token = core.getInput("token");
-	const ref = core.getInput("ref");
-
-	if (!inputEnvironments) {
-		throw new Error(
-			"please provide a JSON object containing the target environments to deploy. with the keys being the environment name and the values being the deployment url",
-		);
-	}
-
-	const parsedEnvironments = JSON.parse(inputEnvironments);
-
-	const environments: [string, string][] = Object.entries(parsedEnvironments);
-
-	const auto_inactive = core.getBooleanInput("invalidate_previous");
-
-	return {
-		auto_inactive,
-		environments,
-		ref,
-		token,
-	};
 }

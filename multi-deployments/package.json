@@ -1,7 +1,8 @@
 {
 	"name": "multi-deployments",
+	"type": "module",
+	"main": "./src/index.ts",
 	"scripts": {
 		"build": "tsup ./src/index.ts"
-	},
-	"main": "./src/index.ts"
+	}
 }
