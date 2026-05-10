@@ -4,5 +4,8 @@
 	"main": "./src/index.ts",
 	"scripts": {
 		"build": "tsdown"
+	},
+	"engines": {
+		"node": ">=24"
 	}
 }

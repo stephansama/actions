@@ -3,6 +3,7 @@ import { markdownTable } from "markdown-table";
 import * as fs from "node:fs";
 import * as fsp from "node:fs/promises";
 import path from "node:path";
+import * as url from "node:url";
 import * as yaml from "yaml";
 import { $ as sh } from "zx";
 
@@ -33,7 +34,9 @@ const TableOrder = [
 	"required",
 ] as const satisfies TableHeading[];
 
-if (require.main === module) await run();
+const argv = process.argv.at(1);
+
+if (url.fileURLToPath(import.meta.url) === argv) await run();
 
 export function buildCommentTags(tagName: string) {
 	if (!tagName) {

@@ -1,7 +1,10 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
+import * as url from "node:url";
 
-if (require.main === module) await run();
+const argv = process.argv.at(1);
+
+if (url.fileURLToPath(import.meta.url) === argv) await run();
 
 export function loadInputs() {
 	const inputEnvironments = core.getInput("environments");
