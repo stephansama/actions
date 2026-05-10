@@ -12,6 +12,10 @@ const mocks = vi.hoisted(() => ({
 	updateComment: vi.fn(),
 	createIssue: vi.fn(),
 	compareCommits: vi.fn(),
+	paginate: vi.fn(async (fn: (p: unknown) => Promise<{ data: unknown[] }>, params: unknown) => {
+		const resp = await fn(params);
+		return resp.data;
+	}),
 	getOctokit: vi.fn(() => ({
 		rest: {
 			pulls: { listFiles: mocks.listFiles },
@@ -23,6 +27,7 @@ const mocks = vi.hoisted(() => ({
 			},
 			repos: { compareCommits: mocks.compareCommits },
 		},
+		paginate: mocks.paginate,
 	})),
 }));
 
@@ -241,18 +246,18 @@ describe("todo-to-pr-comment-issue", () => {
 			text: "implement auth",
 		};
 
-		it("contains a link to the file with line anchor", () => {
-			const body = module.buildIssueBody(todo, repoUrl);
-			expect(body).toContain(`${repoUrl}/blob/HEAD/src/auth.ts#L42`);
+		it("contains a link to the file with line anchor using the provided sha", () => {
+			const body = module.buildIssueBody(todo, repoUrl, "abc123");
+			expect(body).toContain(`${repoUrl}/blob/abc123/src/auth.ts#L42`);
 		});
 
 		it("contains the keyword", () => {
-			const body = module.buildIssueBody(todo, repoUrl);
+			const body = module.buildIssueBody(todo, repoUrl, "abc123");
 			expect(body).toContain("`TODO`");
 		});
 
 		it("contains the attribution footer", () => {
-			const body = module.buildIssueBody(todo, repoUrl);
+			const body = module.buildIssueBody(todo, repoUrl, "abc123");
 			expect(body).toContain("todo-to-pr-comment-issue");
 		});
 	});

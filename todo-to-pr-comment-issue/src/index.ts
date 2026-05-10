@@ -105,8 +105,8 @@ export function buildIssueTitle(todo: TodoItem): string {
 	return `${todo.keyword} in \`${todo.file}\`${desc}`;
 }
 
-export function buildIssueBody(todo: TodoItem, repoUrl: string): string {
-	const fileLink = `${repoUrl}/blob/HEAD/${todo.file}#L${todo.lineNumber}`;
+export function buildIssueBody(todo: TodoItem, repoUrl: string, sha: string): string {
+	const fileLink = `${repoUrl}/blob/${sha}/${todo.file}#L${todo.lineNumber}`;
 	return [
 		`**Keyword:** \`${todo.keyword}\``,
 		`**File:** [\`${todo.file}:${todo.lineNumber}\`](${fileLink})`,
@@ -123,12 +123,12 @@ export async function findExistingComment(
 	issueNumber: number,
 	marker: string,
 ): Promise<number | null> {
-	const comments = await octokit.rest.issues.listComments({
+	const comments = await octokit.paginate(octokit.rest.issues.listComments, {
 		owner,
 		repo,
 		issue_number: issueNumber,
 	});
-	const found = comments.data.find((c) => c.body?.includes(marker));
+	const found = comments.find((c) => c.body?.includes(marker));
 	return found?.id ?? null;
 }
 
@@ -178,7 +178,7 @@ export async function handlePullRequest(
 		);
 	}
 
-	const { data: files } = await octokit.rest.pulls.listFiles({
+	const files = await octokit.paginate(octokit.rest.pulls.listFiles, {
 		owner,
 		repo,
 		pull_number: pullNumber,
@@ -232,7 +232,7 @@ export async function handlePush(
 			owner,
 			repo,
 			title: buildIssueTitle(todo),
-			body: buildIssueBody(todo, repoUrl),
+			body: buildIssueBody(todo, repoUrl, github.context.sha),
 			labels: ["todo"],
 		});
 	}
