@@ -251,6 +251,12 @@ importers:
 
   multi-deployments: {}
 
+  todo-to-pr-comment-issue:
+    devDependencies:
+      markdown-table:
+        specifier: 'catalog:'
+        version: 3.0.4
+
 packages:
 
   '@actions/core@1.11.1':

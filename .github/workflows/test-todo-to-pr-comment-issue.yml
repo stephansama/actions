@@ -1,0 +1,42 @@
+name: 🧪 Test todo-to-pr-comment-issue
+on:
+  pull_request:
+    branches: [main]
+    paths: ["todo-to-pr-comment-issue/**.ts"]
+  workflow_run:
+    workflows: ["release"]
+    types: ["completed"]
+  workflow_dispatch:
+env:
+  HUSKY: 0
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    if: ${{github.event.workflow_run.conclusion != 'success'}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: "pnpm"
+          node-version-file: ".node-version"
+      - name: 📦 Installing dependencies
+        run: pnpm install
+      - name: 🏗️ Build all actions
+        run: pnpm run build
+      - uses: ./todo-to-pr-comment-issue
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          create_issues: false
+  release:
+    runs-on: ubuntu-latest
+    if: ${{github.event.workflow_run.conclusion == 'success'}}
+    steps:
+      - uses: stephansama/actions/todo-to-pr-comment-issue@v1
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          create_issues: false
