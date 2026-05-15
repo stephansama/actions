@@ -1,56 +1,76 @@
+import type * as github from "@actions/github";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as module from "./index";
 
+type OctokitClient = ReturnType<typeof github.getOctokit>;
+
 const mocks = vi.hoisted(() => ({
+	compareCommits: vi.fn(),
+	createComment: vi.fn(),
+	createIssue: vi.fn(),
 	getBooleanInput: vi.fn(),
 	getInput: vi.fn(),
-	warning: vi.fn(),
-	listFiles: vi.fn(),
-	listComments: vi.fn(),
-	createComment: vi.fn(),
-	updateComment: vi.fn(),
-	createIssue: vi.fn(),
-	compareCommits: vi.fn(),
-	paginate: vi.fn(async (fn: (p: unknown) => Promise<{ data: unknown[] }>, params: unknown) => {
-		const resp = await fn(params);
-		return resp.data;
-	}),
-	getOctokit: vi.fn(() => ({
+	getOctokit: vi.fn((): OctokitClient => ({
+		paginate: mocks.paginate,
 		rest: {
-			pulls: { listFiles: mocks.listFiles },
 			issues: {
-				listComments: mocks.listComments,
-				createComment: mocks.createComment,
-				updateComment: mocks.updateComment,
 				create: mocks.createIssue,
+				createComment: mocks.createComment,
+				listComments: mocks.listComments,
+				updateComment: mocks.updateComment,
 			},
+			pulls: { listFiles: mocks.listFiles },
 			repos: { compareCommits: mocks.compareCommits },
 		},
-		paginate: mocks.paginate,
-	})),
+	} as unknown as OctokitClient)),
+	listComments: vi.fn(),
+	listFiles: vi.fn(),
+	paginate: vi.fn(
+		async (
+			function_: (p: unknown) => Promise<{ data: unknown[] }>,
+			parameters: unknown,
+		) => {
+			const resp = await function_(parameters);
+			return resp.data;
+		},
+	),
+	updateComment: vi.fn(),
+	warning: vi.fn(),
 }));
 
 vi.mock("@actions/core", () => ({
-	getInput: mocks.getInput,
 	getBooleanInput: mocks.getBooleanInput,
+	getInput: mocks.getInput,
 	warning: mocks.warning,
 }));
 
 vi.mock("@actions/github", () => ({
 	context: {
-		repo: { owner: "stephansama", repo: "actions" },
-		sha: "abc123",
 		eventName: "pull_request",
 		payload: {
-			pull_request: { number: 42, head: { sha: "abc123" } },
 			before: "def456",
+			pull_request: { head: { sha: "abc123" }, number: 42 },
 		},
+		repo: { owner: "stephansama", repo: "actions" },
+		sha: "abc123",
 	},
 	getOctokit: mocks.getOctokit,
 }));
 
-const DEFAULT_KEYWORDS = ["TODO", "FIXME", "FIX", "BUG", "HACK", "WARN", "WARNING", "XXX", "PERF", "TEST"];
+const DEFAULT_KEYWORDS = [
+	"TODO",
+	"FIXME",
+	"FIX",
+	"BUG",
+	"HACK",
+	"WARN",
+	"WARNING",
+	"XXX",
+	"PERF",
+	"TEST",
+];
 const DEFAULT_MARKER = "<!-- todo-to-pr-comment-issue -->";
 
 describe("todo-to-pr-comment-issue", () => {
@@ -121,13 +141,14 @@ describe("todo-to-pr-comment-issue", () => {
 		});
 
 		it("detects a TODO on an added line with correct line number", () => {
-			const patch = "@@ -1,3 +1,4 @@\n context\n+// TODO: do something\n context";
+			const patch =
+				"@@ -1,3 +1,4 @@\n context\n+// TODO: do something\n context";
 			const items = module.parseDiffHunk(patch, "src/foo.ts", re);
 			expect(items).toHaveLength(1);
 			expect(items[0]).toMatchObject({
 				file: "src/foo.ts",
-				lineNumber: 2,
 				keyword: "TODO",
+				lineNumber: 2,
 				text: "do something",
 			});
 		});
@@ -157,8 +178,8 @@ describe("todo-to-pr-comment-issue", () => {
 			].join("\n");
 			const items = module.parseDiffHunk(patch, "src/bar.ts", re);
 			expect(items).toHaveLength(1);
-			expect(items[0]!.lineNumber).toBe(11);
-			expect(items[0]!.keyword).toBe("FIXME");
+			expect(items[0].lineNumber).toBe(11);
+			expect(items[0].keyword).toBe("FIXME");
 		});
 
 		it("returns empty array when no TODOs in added lines", () => {
@@ -180,7 +201,12 @@ describe("todo-to-pr-comment-issue", () => {
 
 		it("contains a table header when todos present", () => {
 			const todos: module.TodoItem[] = [
-				{ file: "src/a.ts", lineNumber: 5, keyword: "TODO", text: "fix me" },
+				{
+					file: "src/a.ts",
+					keyword: "TODO",
+					lineNumber: 5,
+					text: "fix me",
+				},
 			];
 			const body = module.buildPrCommentBody(todos, DEFAULT_MARKER);
 			expect(body).toContain("File");
@@ -191,8 +217,18 @@ describe("todo-to-pr-comment-issue", () => {
 
 		it("includes each todo item in the output", () => {
 			const todos: module.TodoItem[] = [
-				{ file: "src/a.ts", lineNumber: 5, keyword: "TODO", text: "fix me" },
-				{ file: "src/b.ts", lineNumber: 10, keyword: "FIXME", text: "broken" },
+				{
+					file: "src/a.ts",
+					keyword: "TODO",
+					lineNumber: 5,
+					text: "fix me",
+				},
+				{
+					file: "src/b.ts",
+					keyword: "FIXME",
+					lineNumber: 10,
+					text: "broken",
+				},
 			];
 			const body = module.buildPrCommentBody(todos, DEFAULT_MARKER);
 			expect(body).toContain("src/a.ts");
@@ -206,8 +242,8 @@ describe("todo-to-pr-comment-issue", () => {
 		it("includes keyword and filename", () => {
 			const title = module.buildIssueTitle({
 				file: "src/auth.ts",
-				lineNumber: 42,
 				keyword: "TODO",
+				lineNumber: 42,
 				text: "implement auth",
 			});
 			expect(title).toContain("TODO");
@@ -218,8 +254,8 @@ describe("todo-to-pr-comment-issue", () => {
 			const longText = "a".repeat(80);
 			const title = module.buildIssueTitle({
 				file: "src/foo.ts",
-				lineNumber: 1,
 				keyword: "BUG",
+				lineNumber: 1,
 				text: longText,
 			});
 			expect(title).toContain("a".repeat(60));
@@ -229,8 +265,8 @@ describe("todo-to-pr-comment-issue", () => {
 		it("omits description when text is empty", () => {
 			const title = module.buildIssueTitle({
 				file: "src/foo.ts",
-				lineNumber: 1,
 				keyword: "HACK",
+				lineNumber: 1,
 				text: "",
 			});
 			expect(title).not.toContain(":");
@@ -241,8 +277,8 @@ describe("todo-to-pr-comment-issue", () => {
 		const repoUrl = "https://github.com/stephansama/actions";
 		const todo: module.TodoItem = {
 			file: "src/auth.ts",
-			lineNumber: 42,
 			keyword: "TODO",
+			lineNumber: 42,
 			text: "implement auth",
 		};
 
@@ -280,7 +316,7 @@ describe("todo-to-pr-comment-issue", () => {
 		it("returns the comment_id when a matching comment is found", async () => {
 			mocks.listComments.mockResolvedValue({
 				data: [
-					{ id: 99, body: `${DEFAULT_MARKER}\n## TODO Comments...` },
+					{ body: `${DEFAULT_MARKER}\n## TODO Comments...`, id: 99 },
 				],
 			});
 			const result = await module.findExistingComment(
@@ -316,7 +352,7 @@ describe("todo-to-pr-comment-issue", () => {
 
 		it("calls updateComment when existing comment found", async () => {
 			mocks.listComments.mockResolvedValue({
-				data: [{ id: 99, body: DEFAULT_MARKER }],
+				data: [{ body: DEFAULT_MARKER, id: 99 }],
 			});
 			mocks.updateComment.mockResolvedValue({});
 
@@ -330,7 +366,7 @@ describe("todo-to-pr-comment-issue", () => {
 			);
 
 			expect(mocks.updateComment).toHaveBeenCalledWith(
-				expect.objectContaining({ comment_id: 99, body: "new body" }),
+				expect.objectContaining({ body: "new body", comment_id: 99 }),
 			);
 			expect(mocks.createComment).not.toHaveBeenCalled();
 		});
@@ -339,10 +375,10 @@ describe("todo-to-pr-comment-issue", () => {
 	describe("handlePullRequest", () => {
 		const octokit = mocks.getOctokit();
 		const inputs = {
-			github_token: "gh-token",
-			keywords: DEFAULT_KEYWORDS,
 			comment_marker: DEFAULT_MARKER,
 			create_issues: true,
+			github_token: "gh-token",
+			keywords: DEFAULT_KEYWORDS,
 		};
 		const re = module.buildTodoRegex(DEFAULT_KEYWORDS);
 
@@ -352,7 +388,13 @@ describe("todo-to-pr-comment-issue", () => {
 			context.payload = {};
 
 			await expect(
-				module.handlePullRequest(octokit, "stephansama", "actions", inputs, re),
+				module.handlePullRequest(
+					octokit,
+					"stephansama",
+					"actions",
+					inputs,
+					re,
+				),
 			).rejects.toThrow("pull_request payload is missing");
 
 			context.payload = originalPayload;
@@ -360,30 +402,52 @@ describe("todo-to-pr-comment-issue", () => {
 
 		it("skips files with no patch (binary files)", async () => {
 			mocks.listFiles.mockResolvedValue({
-				data: [{ filename: "image.png", status: "added", patch: undefined }],
-			});
-			mocks.listComments.mockResolvedValue({ data: [] });
-			mocks.createComment.mockResolvedValue({});
-
-			await module.handlePullRequest(octokit, "stephansama", "actions", inputs, re);
-
-			const callArg = mocks.createComment.mock.calls[0]![0];
-			expect(callArg.body).toContain("No new TODO-style comments");
-		});
-
-		it("skips removed files", async () => {
-			mocks.listFiles.mockResolvedValue({
 				data: [
-					{ filename: "src/old.ts", status: "removed", patch: "-// TODO: removed" },
+					{
+						filename: "image.png",
+						patch: undefined,
+						status: "added",
+					},
 				],
 			});
 			mocks.listComments.mockResolvedValue({ data: [] });
 			mocks.createComment.mockResolvedValue({});
 
-			await module.handlePullRequest(octokit, "stephansama", "actions", inputs, re);
+			await module.handlePullRequest(
+				octokit,
+				"stephansama",
+				"actions",
+				inputs,
+				re,
+			);
 
-			const callArg = mocks.createComment.mock.calls[0]![0];
-			expect(callArg.body).toContain("No new TODO-style comments");
+			const callArgument = mocks.createComment.mock.calls[0][0];
+			expect(callArgument.body).toContain("No new TODO-style comments");
+		});
+
+		it("skips removed files", async () => {
+			mocks.listFiles.mockResolvedValue({
+				data: [
+					{
+						filename: "src/old.ts",
+						patch: "-// TODO: removed",
+						status: "removed",
+					},
+				],
+			});
+			mocks.listComments.mockResolvedValue({ data: [] });
+			mocks.createComment.mockResolvedValue({});
+
+			await module.handlePullRequest(
+				octokit,
+				"stephansama",
+				"actions",
+				inputs,
+				re,
+			);
+
+			const callArgument = mocks.createComment.mock.calls[0][0];
+			expect(callArgument.body).toContain("No new TODO-style comments");
 		});
 
 		it("calls upsertPrComment with found TODOs", async () => {
@@ -391,18 +455,24 @@ describe("todo-to-pr-comment-issue", () => {
 				data: [
 					{
 						filename: "src/foo.ts",
-						status: "added",
 						patch: "@@ -0,0 +1,2 @@\n+const x = 1;\n+// TODO: add tests",
+						status: "added",
 					},
 				],
 			});
 			mocks.listComments.mockResolvedValue({ data: [] });
 			mocks.createComment.mockResolvedValue({});
 
-			await module.handlePullRequest(octokit, "stephansama", "actions", inputs, re);
+			await module.handlePullRequest(
+				octokit,
+				"stephansama",
+				"actions",
+				inputs,
+				re,
+			);
 
 			expect(mocks.createComment).toHaveBeenCalledOnce();
-			const body = mocks.createComment.mock.calls[0]![0].body as string;
+			const body = mocks.createComment.mock.calls[0][0].body as string;
 			expect(body).toContain("src/foo.ts");
 			expect(body).toContain("TODO");
 		});
@@ -411,17 +481,23 @@ describe("todo-to-pr-comment-issue", () => {
 	describe("handlePush", () => {
 		const octokit = mocks.getOctokit();
 		const inputs = {
-			github_token: "gh-token",
-			keywords: DEFAULT_KEYWORDS,
 			comment_marker: DEFAULT_MARKER,
 			create_issues: true,
+			github_token: "gh-token",
+			keywords: DEFAULT_KEYWORDS,
 		};
 		const re = module.buildTodoRegex(DEFAULT_KEYWORDS);
 
 		it("calls compareCommits with before/sha", async () => {
 			mocks.compareCommits.mockResolvedValue({ data: { files: [] } });
 
-			await module.handlePush(octokit, "stephansama", "actions", inputs, re);
+			await module.handlePush(
+				octokit,
+				"stephansama",
+				"actions",
+				inputs,
+				re,
+			);
 
 			expect(mocks.compareCommits).toHaveBeenCalledWith(
 				expect.objectContaining({ base: "def456", head: "abc123" }),
@@ -434,8 +510,8 @@ describe("todo-to-pr-comment-issue", () => {
 					files: [
 						{
 							filename: "src/foo.ts",
-							status: "added",
 							patch: "@@ -0,0 +1,1 @@\n+// TODO: fix",
+							status: "added",
 						},
 					],
 				},
@@ -458,15 +534,21 @@ describe("todo-to-pr-comment-issue", () => {
 					files: [
 						{
 							filename: "src/foo.ts",
-							status: "added",
 							patch: "@@ -0,0 +1,2 @@\n+// TODO: first\n+// FIXME: second",
+							status: "added",
 						},
 					],
 				},
 			});
 			mocks.createIssue.mockResolvedValue({});
 
-			await module.handlePush(octokit, "stephansama", "actions", inputs, re);
+			await module.handlePush(
+				octokit,
+				"stephansama",
+				"actions",
+				inputs,
+				re,
+			);
 
 			expect(mocks.createIssue).toHaveBeenCalledTimes(2);
 		});
@@ -476,7 +558,13 @@ describe("todo-to-pr-comment-issue", () => {
 			const originalBefore = context.payload.before;
 			context.payload.before = "0".repeat(40);
 
-			await module.handlePush(octokit, "stephansama", "actions", inputs, re);
+			await module.handlePush(
+				octokit,
+				"stephansama",
+				"actions",
+				inputs,
+				re,
+			);
 
 			expect(mocks.compareCommits).not.toHaveBeenCalled();
 			expect(mocks.warning).toHaveBeenCalled();
