@@ -12,8 +12,6 @@ const mocks = vi.hoisted(() => ({
 	updateComment: vi.fn(),
 	createIssue: vi.fn(),
 	compareCommits: vi.fn(),
-	getContent: vi.fn(),
-	parseSync: vi.fn(),
 	paginate: vi.fn(async (fn: (p: unknown) => Promise<{ data: unknown[] }>, params: unknown) => {
 		const resp = await fn(params);
 		return resp.data;
@@ -27,13 +25,11 @@ const mocks = vi.hoisted(() => ({
 				updateComment: mocks.updateComment,
 				create: mocks.createIssue,
 			},
-			repos: { compareCommits: mocks.compareCommits, getContent: mocks.getContent },
+			repos: { compareCommits: mocks.compareCommits },
 		},
 		paginate: mocks.paginate,
 	})),
 }));
-
-vi.mock("oxc-parser", () => ({ parseSync: mocks.parseSync }));
 
 vi.mock("@actions/core", () => ({
 	getInput: mocks.getInput,
@@ -168,132 +164,6 @@ describe("todo-to-pr-comment-issue", () => {
 		it("returns empty array when no TODOs in added lines", () => {
 			const patch = "@@ -1,1 +1,2 @@\n context\n+const x = 1;";
 			expect(module.parseDiffHunk(patch, "src/foo.ts", re)).toEqual([]);
-		});
-	});
-
-	describe("isJsOrTs", () => {
-		it.each(["file.ts", "file.tsx", "file.js", "file.jsx", "file.mjs", "file.cjs"])(
-			"returns true for %s",
-			(filename) => {
-				expect(module.isJsOrTs(filename)).toBe(true);
-			},
-		);
-
-		it.each(["file.py", "file.yml", "file.md", "file.sh"])(
-			"returns false for %s",
-			(filename) => {
-				expect(module.isJsOrTs(filename)).toBe(false);
-			},
-		);
-	});
-
-	describe("getAddedLines", () => {
-		it("returns empty set for empty patch", () => {
-			expect(module.getAddedLines("")).toEqual(new Set());
-		});
-
-		it("includes line numbers for added lines", () => {
-			const patch = "@@ -1,1 +1,2 @@\n context\n+added line";
-			expect(module.getAddedLines(patch)).toEqual(new Set([2]));
-		});
-
-		it("excludes removed and context lines", () => {
-			const patch = "@@ -1,2 +1,1 @@\n context\n-removed";
-			expect(module.getAddedLines(patch).size).toBe(0);
-		});
-
-		it("tracks line numbers correctly across multiple hunks", () => {
-			const patch = [
-				"@@ -1,1 +1,1 @@",
-				" line1",
-				"@@ -10,1 +10,2 @@",
-				" line10",
-				"+added",
-			].join("\n");
-			expect(module.getAddedLines(patch)).toEqual(new Set([11]));
-		});
-	});
-
-	describe("fetchFileContent", () => {
-		const octokit = mocks.getOctokit();
-
-		it("returns decoded file content", async () => {
-			const rawContent = "// TODO: fix this";
-			mocks.getContent.mockResolvedValue({
-				data: { type: "file", content: Buffer.from(rawContent).toString("base64") },
-			});
-			const result = await module.fetchFileContent(octokit, "owner", "repo", "src/foo.ts", "abc123");
-			expect(result).toBe(rawContent);
-		});
-
-		it("returns empty string for directory entries", async () => {
-			mocks.getContent.mockResolvedValue({ data: [{ type: "file", name: "foo.ts" }] });
-			const result = await module.fetchFileContent(octokit, "owner", "repo", "src", "abc123");
-			expect(result).toBe("");
-		});
-	});
-
-	describe("extractTodosWithOxc", () => {
-		const content = "const x = 1;\n// TODO: fix this";
-
-		it("returns TodoItem for a matching line comment on an added line", () => {
-			mocks.parseSync.mockReturnValue({
-				comments: [{ start: 13, value: " TODO: fix this", type: "Line" }],
-			});
-			const result = module.extractTodosWithOxc(
-				content,
-				"src/foo.ts",
-				new Set([2]),
-				DEFAULT_KEYWORDS,
-			);
-			expect(result).toHaveLength(1);
-			expect(result[0]).toMatchObject({
-				file: "src/foo.ts",
-				lineNumber: 2,
-				keyword: "TODO",
-				text: "fix this",
-			});
-		});
-
-		it("skips comments not on added lines", () => {
-			mocks.parseSync.mockReturnValue({
-				comments: [{ start: 13, value: " TODO: fix this", type: "Line" }],
-			});
-			const result = module.extractTodosWithOxc(
-				content,
-				"src/foo.ts",
-				new Set([1]),
-				DEFAULT_KEYWORDS,
-			);
-			expect(result).toHaveLength(0);
-		});
-
-		it("skips comments that don't match any keyword", () => {
-			mocks.parseSync.mockReturnValue({
-				comments: [{ start: 13, value: " NOTE: this is fine", type: "Line" }],
-			});
-			const result = module.extractTodosWithOxc(
-				content,
-				"src/foo.ts",
-				new Set([2]),
-				DEFAULT_KEYWORDS,
-			);
-			expect(result).toHaveLength(0);
-		});
-
-		it("detects block comments with a matching keyword", () => {
-			mocks.parseSync.mockReturnValue({
-				comments: [{ start: 0, value: " TODO: fix me ", type: "Block" }],
-			});
-			const result = module.extractTodosWithOxc(
-				"/* TODO: fix me */",
-				"src/foo.ts",
-				new Set([1]),
-				DEFAULT_KEYWORDS,
-			);
-			expect(result).toHaveLength(1);
-			expect(result[0]!.keyword).toBe("TODO");
-			expect(result[0]!.text).toBe("fix me");
 		});
 	});
 
@@ -517,7 +387,6 @@ describe("todo-to-pr-comment-issue", () => {
 		});
 
 		it("calls upsertPrComment with found TODOs", async () => {
-			const content = "const x = 1;\n// TODO: add tests";
 			mocks.listFiles.mockResolvedValue({
 				data: [
 					{
@@ -526,12 +395,6 @@ describe("todo-to-pr-comment-issue", () => {
 						patch: "@@ -0,0 +1,2 @@\n+const x = 1;\n+// TODO: add tests",
 					},
 				],
-			});
-			mocks.getContent.mockResolvedValue({
-				data: { type: "file", content: Buffer.from(content).toString("base64") },
-			});
-			mocks.parseSync.mockReturnValue({
-				comments: [{ start: 13, value: " TODO: add tests", type: "Line" }],
 			});
 			mocks.listComments.mockResolvedValue({ data: [] });
 			mocks.createComment.mockResolvedValue({});
@@ -577,10 +440,6 @@ describe("todo-to-pr-comment-issue", () => {
 					],
 				},
 			});
-			mocks.getContent.mockResolvedValue({
-				data: { type: "file", content: Buffer.from("// TODO: fix").toString("base64") },
-			});
-			mocks.parseSync.mockReturnValue({ comments: [] });
 
 			await module.handlePush(
 				octokit,
@@ -594,7 +453,6 @@ describe("todo-to-pr-comment-issue", () => {
 		});
 
 		it("creates one issue per TODO when create_issues is true", async () => {
-			const content = "// TODO: first\n// FIXME: second";
 			mocks.compareCommits.mockResolvedValue({
 				data: {
 					files: [
@@ -605,15 +463,6 @@ describe("todo-to-pr-comment-issue", () => {
 						},
 					],
 				},
-			});
-			mocks.getContent.mockResolvedValue({
-				data: { type: "file", content: Buffer.from(content).toString("base64") },
-			});
-			mocks.parseSync.mockReturnValue({
-				comments: [
-					{ start: 0, value: " TODO: first", type: "Line" },
-					{ start: 15, value: " FIXME: second", type: "Line" },
-				],
 			});
 			mocks.createIssue.mockResolvedValue({});
 
