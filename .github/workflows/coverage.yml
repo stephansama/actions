@@ -31,3 +31,12 @@ jobs:
       - name: 🧪 Upload test results to Codecov 🔼
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
+  todo-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: stephansama/actions/todo-to-pr-comment-issue@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
