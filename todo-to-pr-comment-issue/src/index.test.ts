@@ -12,19 +12,22 @@ const mocks = vi.hoisted(() => ({
 	createIssue: vi.fn(),
 	getBooleanInput: vi.fn(),
 	getInput: vi.fn(),
-	getOctokit: vi.fn((): OctokitClient => ({
-		paginate: mocks.paginate,
-		rest: {
-			issues: {
-				create: mocks.createIssue,
-				createComment: mocks.createComment,
-				listComments: mocks.listComments,
-				updateComment: mocks.updateComment,
-			},
-			pulls: { listFiles: mocks.listFiles },
-			repos: { compareCommits: mocks.compareCommits },
-		},
-	} as unknown as OctokitClient)),
+	getOctokit: vi.fn(
+		(): OctokitClient =>
+			({
+				paginate: mocks.paginate,
+				rest: {
+					issues: {
+						create: mocks.createIssue,
+						createComment: mocks.createComment,
+						listComments: mocks.listComments,
+						updateComment: mocks.updateComment,
+					},
+					pulls: { listFiles: mocks.listFiles },
+					repos: { compareCommits: mocks.compareCommits },
+				},
+			}) as unknown as OctokitClient,
+	),
 	listComments: vi.fn(),
 	listFiles: vi.fn(),
 	paginate: vi.fn(

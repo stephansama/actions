@@ -9,78 +9,29 @@ if (url.fileURLToPath(import.meta.url) === argv) await run();
 
 export type TodoItem = {
 	file: string;
-	lineNumber: number;
 	keyword: string;
+	lineNumber: number;
 	text: string;
 };
 
-export function loadInputs() {
-	const github_token = core.getInput("github_token", { required: true });
-	const keywordsRaw = core.getInput("keywords");
-	const keywords = keywordsRaw
-		.split(",")
-		.map((k) => k.trim())
-		.filter(Boolean);
-	const comment_marker = core.getInput("comment_marker");
-	const create_issues = core.getBooleanInput("create_issues");
-	return { github_token, keywords, comment_marker, create_issues };
+export function buildIssueBody(
+	todo: TodoItem,
+	repoUrl: string,
+	sha: string,
+): string {
+	const fileLink = `${repoUrl}/blob/${sha}/${todo.file}#L${todo.lineNumber}`;
+	return [
+		`**Keyword:** \`${todo.keyword}\``,
+		`**File:** [\`${todo.file}:${todo.lineNumber}\`](${fileLink})`,
+		`**Description:** ${todo.text || "_(none provided)_"}`,
+		"",
+		`_Automatically created by the \`todo-to-pr-comment-issue\` action._`,
+	].join("\n");
 }
 
-export function buildTodoRegex(keywords: string[]): RegExp {
-	const escaped = keywords.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-	const alt = escaped.join("|");
-	return new RegExp(
-		`(?:\\/\\/|\\/\\*|#)\\s*(${alt})(?::|(?=\\s)|$)(.*)`,
-		"i",
-	);
-}
-
-export function parseDiffHunk(
-	patch: string,
-	filename: string,
-	regex: RegExp,
-): TodoItem[] {
-	if (!patch) return [];
-
-	const items: TodoItem[] = [];
-	const hunkHeaderRe = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
-	let currentNewLine = 0;
-
-	for (const line of patch.split("\n")) {
-		const hunkMatch = hunkHeaderRe.exec(line);
-		if (hunkMatch) {
-			currentNewLine = parseInt(hunkMatch[1]!, 10) - 1;
-			continue;
-		}
-		if (line.startsWith("-")) continue;
-		if (line.startsWith(" ")) {
-			currentNewLine++;
-			continue;
-		}
-		if (line.startsWith("+")) {
-			currentNewLine++;
-			const content = line.slice(1);
-			const m = regex.exec(content);
-			if (m) {
-				items.push({
-					file: filename,
-					lineNumber: currentNewLine,
-					keyword: m[1]!.toUpperCase(),
-					text: m[2]?.trim() ?? "",
-				});
-			}
-		}
-	}
-
-	return items;
-}
-
-function shouldSkipFile(filename: string, status: string, patch?: string): boolean {
-	if (status === "removed") return true;
-	if (!patch) return true;
-	if (/\.min\.[jt]sx?$/.test(filename)) return true;
-	if (["dist/", "build/", ".next/"].some((prefix) => filename.startsWith(prefix))) return true;
-	return false;
+export function buildIssueTitle(todo: TodoItem): string {
+	const desc = todo.text ? `: ${todo.text.slice(0, 60)}` : "";
+	return `${todo.keyword} in \`${todo.file}\`${desc}`;
 }
 
 export function buildPrCommentBody(todos: TodoItem[], marker: string): string {
@@ -100,20 +51,15 @@ export function buildPrCommentBody(todos: TodoItem[], marker: string): string {
 	return `${header}\n${table}\n`;
 }
 
-export function buildIssueTitle(todo: TodoItem): string {
-	const desc = todo.text ? `: ${todo.text.slice(0, 60)}` : "";
-	return `${todo.keyword} in \`${todo.file}\`${desc}`;
-}
-
-export function buildIssueBody(todo: TodoItem, repoUrl: string, sha: string): string {
-	const fileLink = `${repoUrl}/blob/${sha}/${todo.file}#L${todo.lineNumber}`;
-	return [
-		`**Keyword:** \`${todo.keyword}\``,
-		`**File:** [\`${todo.file}:${todo.lineNumber}\`](${fileLink})`,
-		`**Description:** ${todo.text || "_(none provided)_"}`,
-		"",
-		`_Automatically created by the \`todo-to-pr-comment-issue\` action._`,
-	].join("\n");
+export function buildTodoRegex(keywords: string[]): RegExp {
+	const escaped = keywords.map((k) =>
+		k.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`),
+	);
+	const alt = escaped.join("|");
+	return new RegExp(
+		String.raw`(?:\/\/|\/\*|#)\s*(${alt})(?::|(?=\s)|$)(.*)`,
+		"i",
+	);
 }
 
 export async function findExistingComment(
@@ -122,46 +68,15 @@ export async function findExistingComment(
 	repo: string,
 	issueNumber: number,
 	marker: string,
-): Promise<number | null> {
+): Promise<null | number> {
 	const comments = await octokit.paginate(octokit.rest.issues.listComments, {
+		issue_number: issueNumber,
 		owner,
 		repo,
-		issue_number: issueNumber,
 	});
 	const found = comments.find((c) => c.body?.includes(marker));
+	// TODO: handle this issue
 	return found?.id ?? null;
-}
-
-export async function upsertPrComment(
-	octokit: ReturnType<typeof github.getOctokit>,
-	owner: string,
-	repo: string,
-	issueNumber: number,
-	body: string,
-	marker: string,
-): Promise<void> {
-	const existingId = await findExistingComment(
-		octokit,
-		owner,
-		repo,
-		issueNumber,
-		marker,
-	);
-	if (existingId !== null) {
-		await octokit.rest.issues.updateComment({
-			owner,
-			repo,
-			comment_id: existingId,
-			body,
-		});
-	} else {
-		await octokit.rest.issues.createComment({
-			owner,
-			repo,
-			issue_number: issueNumber,
-			body,
-		});
-	}
 }
 
 export async function handlePullRequest(
@@ -180,8 +95,8 @@ export async function handlePullRequest(
 
 	const files = await octokit.paginate(octokit.rest.pulls.listFiles, {
 		owner,
-		repo,
 		pull_number: pullNumber,
+		repo,
 	});
 
 	const todos: TodoItem[] = [];
@@ -191,7 +106,14 @@ export async function handlePullRequest(
 	}
 
 	const body = buildPrCommentBody(todos, inputs.comment_marker);
-	await upsertPrComment(octokit, owner, repo, pullNumber, body, inputs.comment_marker);
+	await upsertPrComment(
+		octokit,
+		owner,
+		repo,
+		pullNumber,
+		body,
+		inputs.comment_marker,
+	);
 }
 
 export async function handlePush(
@@ -204,15 +126,17 @@ export async function handlePush(
 	const before = github.context.payload.before as string | undefined;
 
 	if (!before || before === "0".repeat(40)) {
-		core.warning("Skipping TODO issue creation: initial push has no base commit to diff against.");
+		core.warning(
+			"Skipping TODO issue creation: initial push has no base commit to diff against.",
+		);
 		return;
 	}
 
 	const { data: comparison } = await octokit.rest.repos.compareCommits({
-		owner,
-		repo,
 		base: before,
 		head: github.context.sha,
+		owner,
+		repo,
 	});
 
 	const todos: TodoItem[] = [];
@@ -222,20 +146,74 @@ export async function handlePush(
 	}
 
 	if (!inputs.create_issues) {
-		core.warning(`create_issues is false — skipping issue creation for ${todos.length} TODO(s) found.`);
+		core.warning(
+			`create_issues is false — skipping issue creation for ${todos.length} TODO(s) found.`,
+		);
 		return;
 	}
 
 	const repoUrl = `https://github.com/${owner}/${repo}`;
 	for (const todo of todos) {
 		await octokit.rest.issues.create({
+			body: buildIssueBody(todo, repoUrl, github.context.sha),
+			labels: ["todo"],
 			owner,
 			repo,
 			title: buildIssueTitle(todo),
-			body: buildIssueBody(todo, repoUrl, github.context.sha),
-			labels: ["todo"],
 		});
 	}
+}
+
+export function loadInputs() {
+	const github_token = core.getInput("github_token", { required: true });
+	const keywordsRaw = core.getInput("keywords");
+	const keywords = keywordsRaw
+		.split(",")
+		.map((k) => k.trim())
+		.filter(Boolean);
+	const comment_marker = core.getInput("comment_marker");
+	const create_issues = core.getBooleanInput("create_issues");
+	return { comment_marker, create_issues, github_token, keywords };
+}
+
+export function parseDiffHunk(
+	patch: string,
+	filename: string,
+	regex: RegExp,
+): TodoItem[] {
+	if (!patch) return [];
+
+	const items: TodoItem[] = [];
+	const hunkHeaderRe = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
+	let currentNewLine = 0;
+
+	for (const line of patch.split("\n")) {
+		const hunkMatch = hunkHeaderRe.exec(line);
+		if (hunkMatch) {
+			currentNewLine = Number.parseInt(hunkMatch[1], 10) - 1;
+			continue;
+		}
+		if (line.startsWith("-")) continue;
+		if (line.startsWith(" ")) {
+			currentNewLine++;
+			continue;
+		}
+		if (line.startsWith("+")) {
+			currentNewLine++;
+			const content = line.slice(1);
+			const m = regex.exec(content);
+			if (m) {
+				items.push({
+					file: filename,
+					keyword: m[1].toUpperCase(),
+					lineNumber: currentNewLine,
+					text: m[2]?.trim() ?? "",
+				});
+			}
+		}
+	}
+
+	return items;
 }
 
 export async function run(): Promise<void> {
@@ -251,4 +229,51 @@ export async function run(): Promise<void> {
 	} else {
 		core.warning(`Unsupported event: ${github.context.eventName}`);
 	}
+}
+
+export async function upsertPrComment(
+	octokit: ReturnType<typeof github.getOctokit>,
+	owner: string,
+	repo: string,
+	issueNumber: number,
+	body: string,
+	marker: string,
+): Promise<void> {
+	const existingId = await findExistingComment(
+		octokit,
+		owner,
+		repo,
+		issueNumber,
+		marker,
+	);
+	await (existingId === null
+		? octokit.rest.issues.createComment({
+				body,
+				issue_number: issueNumber,
+				owner,
+				repo,
+			})
+		: octokit.rest.issues.updateComment({
+				body,
+				comment_id: existingId,
+				owner,
+				repo,
+			}));
+}
+
+function shouldSkipFile(
+	filename: string,
+	status: string,
+	patch?: string,
+): boolean {
+	if (status === "removed") return true;
+	if (!patch) return true;
+	if (/\.min\.[jt]sx?$/.test(filename)) return true;
+	if (
+		["dist/", "build/", ".next/"].some((prefix) =>
+			filename.startsWith(prefix),
+		)
+	)
+		return true;
+	return false;
 }
