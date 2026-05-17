@@ -1,0 +1,61 @@
+name: 🧪 Test todo-to-pr-comment-issue
+on:
+  pull_request:
+    branches: [main]
+    paths: ["todo-to-pr-comment-issue/**.ts"]
+  workflow_run:
+    workflows: ["release"]
+    types: ["completed"]
+  workflow_dispatch:
+env:
+  HUSKY: 0
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    if: ${{github.event.workflow_run.conclusion != 'success'}}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{github.head_ref}}
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: "pnpm"
+          node-version-file: ".node-version"
+      - name: 📦 Installing dependencies
+        run: pnpm install
+      - name: 🏗️ Build all actions
+        run: pnpm run build
+      - name: 📝 Inject test TODO fixture into PR diff
+        id: inject
+        if: github.event_name == 'pull_request'
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          echo "original-sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          printf '// TODO: workflow test fixture\n' > todo-to-pr-comment-issue/src/test-fixture.ts
+          git add todo-to-pr-comment-issue/src/test-fixture.ts
+          git commit -m "test: TODO fixture [skip ci]"
+          git push
+      - uses: ./todo-to-pr-comment-issue
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          create_issues: false
+      - name: 🧹 Rewind test commit
+        if: always() && steps.inject.outcome == 'success'
+        run: |
+          git reset --hard ${{steps.inject.outputs.original-sha}}
+          git push --force-with-lease
+  release:
+    runs-on: ubuntu-latest
+    if: ${{github.event.workflow_run.conclusion == 'success'}}
+    steps:
+      - uses: stephansama/actions/todo-to-pr-comment-issue@v1
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          create_issues: false

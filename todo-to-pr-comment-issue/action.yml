@@ -1,0 +1,22 @@
+name: todo-to-pr-comment-issue
+author: Stephan Randle
+description: Scan PR diffs for TODO-style comments; post a PR comment and create issues on merge
+inputs:
+  github_token:
+    description: GitHub token for API calls
+    required: true
+  keywords:
+    description: Comma-separated list of TODO-style keywords to detect
+    required: false
+    default: "TODO,FIXME,FIX,BUG,HACK,WARN,WARNING,XXX,PERF,TEST"
+  comment_marker:
+    description: HTML comment used to find and update the existing PR comment (idempotency anchor)
+    required: false
+    default: "<!-- todo-to-pr-comment-issue -->"
+  create_issues:
+    description: Whether to create GitHub issues for TODOs on merge
+    required: false
+    default: "true"
+runs:
+  using: node20
+  main: ./dist/index.mjs

@@ -1,0 +1,14 @@
+{
+	"name": "todo-to-pr-comment-issue",
+	"type": "module",
+	"main": "./src/index.ts",
+	"scripts": {
+		"build": "tsdown"
+	},
+	"devDependencies": {
+		"markdown-table": "catalog:"
+	},
+	"engines": {
+		"node": ">=24"
+	}
+}

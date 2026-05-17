@@ -4,6 +4,7 @@
 		{ "path": "./.config/www/tsconfig.json" },
 		{ "path": "./do-not-track-polyfill/tsconfig.json" },
 		{ "path": "./generate-md-action-inputs/tsconfig.json" },
-		{ "path": "./multi-deployments/tsconfig.json" }
+		{ "path": "./multi-deployments/tsconfig.json" },
+		{ "path": "./todo-to-pr-comment-issue/tsconfig.json" }
 	]
 }

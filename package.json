@@ -63,5 +63,8 @@
 		"vitest": "catalog:",
 		"wrangler": "catalog:"
 	},
-	"packageManager": "pnpm@10.13.1"
+	"packageManager": "pnpm@10.13.1",
+	"dependencies": {
+		"@stephansama/pnpm-hooks": "https://pkg.pr.new/stephansama/packages/@stephansama/pnpm-hooks@277"
+	}
 }
