@@ -1,6 +1,6 @@
 .turbo
 coverage
-dist
+
 node_modules
 tmp
 **/.vitepress/cache
