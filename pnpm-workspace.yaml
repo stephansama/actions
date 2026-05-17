@@ -15,6 +15,7 @@ catalog:
   "@stephansama/ai-commit-msg": 1.0.6
   "@stephansama/auto-readme": 0.1.0
   "@stephansama/eslint-config": 0.2.0
+  "@stephansama/pnpm-hooks": 0.1.1
   "@stephansama/types-github-action-env": 1.0.3
   "@tsconfig/recommended": 1.0.10
   "@turbo/gen": 2.5.5

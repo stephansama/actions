@@ -126,8 +126,8 @@ importers:
   .:
     dependencies:
       '@stephansama/pnpm-hooks':
-        specifier: https://pkg.pr.new/stephansama/packages/@stephansama/pnpm-hooks@277
-        version: https://pkg.pr.new/stephansama/packages/@stephansama/pnpm-hooks@277(@pnpm/logger@1001.0.1)
+        specifier: 0.1.1
+        version: 0.1.1(@pnpm/logger@1001.0.1)
     devDependencies:
       '@actions/core':
         specifier: 'catalog:'
@@ -2288,9 +2288,8 @@ packages:
       svelte-eslint-parser:
         optional: true
 
-  '@stephansama/pnpm-hooks@https://pkg.pr.new/stephansama/packages/@stephansama/pnpm-hooks@277':
-    resolution: {tarball: https://pkg.pr.new/stephansama/packages/@stephansama/pnpm-hooks@277}
-    version: 0.0.0
+  '@stephansama/pnpm-hooks@0.1.1':
+    resolution: {integrity: sha512-GRqtxLq9GbQqv4UIY7acEQofzrk8C4IynesvYQ1kigHsHykcIYXD2Leow48PvgvoqIhv6+Ge78rWfqz9gMV7mg==}
     engines: {node: '>=24'}
 
   '@stephansama/types-github-action-env@1.0.3':
@@ -8268,7 +8267,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@stephansama/pnpm-hooks@https://pkg.pr.new/stephansama/packages/@stephansama/pnpm-hooks@277(@pnpm/logger@1001.0.1)':
+  '@stephansama/pnpm-hooks@0.1.1(@pnpm/logger@1001.0.1)':
     dependencies:
       '@pnpm/hooks.pnpmfile': 1100.0.8(@pnpm/logger@1001.0.1)
       '@pnpm/lockfile.types': 1100.0.5

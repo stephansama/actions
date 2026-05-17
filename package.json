@@ -34,6 +34,9 @@
 			}
 		]
 	},
+	"dependencies": {
+		"@stephansama/pnpm-hooks": "0.1.1"
+	},
 	"devDependencies": {
 		"@actions/core": "catalog:",
 		"@actions/github": "catalog:",
@@ -63,8 +66,5 @@
 		"vitest": "catalog:",
 		"wrangler": "catalog:"
 	},
-	"packageManager": "pnpm@10.13.1",
-	"dependencies": {
-		"@stephansama/pnpm-hooks": "https://pkg.pr.new/stephansama/packages/@stephansama/pnpm-hooks@277"
-	}
+	"packageManager": "pnpm@10.13.1"
 }
