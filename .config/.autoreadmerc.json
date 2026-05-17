@@ -1,5 +1,7 @@
 {
-	"$schema": "../node_modules/@stephansama/auto-readme/config/schema.json",
+	"$schema": "../node_modules/@stephansama/auto-readme/dist/schema.json",
+	"affectedRegexes": [],
+	"collapseHeadings": [],
 	"headings": {
 		"ACTION": ["name", "required", "default", "description"],
 		"PKG": ["name", "version", "devDependency"],

@@ -1,19 +1,25 @@
 # 🕵️‍♂️ Do Not Track Polyfill
 
+<!-- BADGE start -->
+
+[![@dotenvx/dotenvx](https://img.shields.io/badge/@dotenvx/dotenvx-1.48.4-ECD53F.svg?logo=dotenv&logoColor=ffffff&labelColor=ECD53F)](https://npmx.dev/package/@dotenvx/dotenvx)
+
+<!-- BADGE end -->
+
 [![🧪 Test do not track (False)](https://github.com/stephansama/actions/actions/workflows/test-do-not-track-polyfill-false.yml/badge.svg)](https://github.com/stephansama/actions/actions/workflows/test-do-not-track-polyfill-false.yml)
 [![🧪 Test do not track (True)](https://github.com/stephansama/actions/actions/workflows/test-do-not-track-polyfill-true.yml/badge.svg)](https://github.com/stephansama/actions/actions/workflows/test-do-not-track-polyfill-true.yml)
 
 A simple GitHub Action that conditionally disables telemetry by setting opt-out environment variables for several popular vendors. It ensures your workflow respects privacy-focused settings by preemptively opting out of analytics, usage reporting, and tracking features — if the relevant tools support them.
 
-***
+---
 
 ## ✨ Features
 
-* Adds common telemetry-related environment variables
+- Adds common telemetry-related environment variables
   (e.g., `ASTRO_TELEMETRY_DISABLED`, etc.)
-* Helps opt out of analytics, error reporting, and tracking
+- Helps opt out of analytics, error reporting, and tracking
 
-***
+---
 
 ## 🚀 Usage
 
@@ -33,28 +39,28 @@ jobs:
       - uses: stephansama/actions/do-not-track-polyfill@v1
 ```
 
-***
+---
 
 ## 🌱 What It Does
 
 This action conditionally sets additional environment
 variables to disable telemetry for popular platforms such as:
 
-* AstroJS
-* Storybook
-* Vercel
+- AstroJS
+- Storybook
+- Vercel
 
 You can also customize which flags are set (see below).
 
-***
+---
 
 <!-- ACTION start -->
 
-### ⚙️ Inputs
+### 🧰 actions
 
-| Name       | Default   | Description                             | Required |
-| ---------- | --------- | --------------------------------------- | -------- |
-| additional | undefined | Additional telemetry providers to block | false    |
+| 🏷️ Name    | Required   | ⚙️ Default | 📝 Description                          |
+| ---------- | ---------- | ---------- | --------------------------------------- |
+| additional | additional | additional | Additional telemetry providers to block |
 
 <!-- ACTION end -->
 
@@ -65,9 +71,9 @@ You can also customize which flags are set (see below).
      TEST=https://test.com
 ```
 
-***
+---
 
 ## 🔒 Why Use This?
 
-* Allows you to turn on and off
-* Prevents telemetry from bloating CI logs or triggering network requests
+- Allows you to turn on and off
+- Prevents telemetry from bloating CI logs or triggering network requests
