@@ -6,9 +6,6 @@ import * as fs from "node:fs/promises";
 import * as url from "node:url";
 import { z } from "zod";
 
-const argv = process.argv.at(1);
-if (url.fileURLToPath(import.meta.url) === argv) await run();
-
 const StrategySchema = z.enum(["commit", "tag"]);
 export type Strategy = z.infer<typeof StrategySchema>;
 
@@ -355,3 +352,6 @@ export async function updateToLatestTag(
 		}),
 	);
 }
+
+const argv = process.argv.at(1);
+if (url.fileURLToPath(import.meta.url) === argv) await run();

@@ -1,3 +1,7 @@
+import { execFileSync } from "node:child_process";
+import * as fs from "node:fs";
+import path from "node:path";
+import * as url from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -438,4 +442,36 @@ describe("run", () => {
 		});
 		expect(cleanupCall).toBeDefined();
 	});
+});
+
+const TDZ_PATTERN = /before initialization/;
+const REFERENCE_ERROR_PATTERN = /ReferenceError/;
+
+describe("entry-point smoke test", () => {
+	const here = path.dirname(url.fileURLToPath(import.meta.url));
+	const distribution = path.resolve(here, "..", "dist", "index.mjs");
+
+	it.skipIf(!fs.existsSync(distribution))(
+		"module loads without TDZ when invoked directly (regression)",
+		() => {
+			let combined = "";
+			try {
+				execFileSync("node", [distribution], {
+					encoding: "utf8",
+					env: {
+						...process.env,
+						INPUT_GITMODULESPATH: "/nonexistent-path",
+						INPUT_STRATEGY: "commit",
+						INPUT_SUBMODULES: "",
+						INPUT_TOKEN: "",
+					},
+				});
+			} catch (error) {
+				const failure = error as { stderr?: string; stdout?: string };
+				combined = (failure.stderr ?? "") + (failure.stdout ?? "");
+			}
+			expect(combined).not.toMatch(TDZ_PATTERN);
+			expect(combined).not.toMatch(REFERENCE_ERROR_PATTERN);
+		},
+	);
 });
