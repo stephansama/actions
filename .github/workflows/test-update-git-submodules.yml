@@ -1,0 +1,91 @@
+name: 🧪 Test update-git-submodules
+on:
+  pull_request:
+    branches: [main]
+    paths: ["update-git-submodules/**.ts"]
+  workflow_run:
+    workflows: ["release"]
+    types: ["completed"]
+  workflow_dispatch:
+env:
+  HUSKY: 0
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    if: ${{github.event.workflow_run.conclusion != 'success'}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: "pnpm"
+          node-version-file: ".node-version"
+      - name: 📦 Installing dependencies
+        run: pnpm install
+      - name: 🏗️ Build all actions
+        run: pnpm run build
+      - name: 🧱 Build fixture parent + child submodule repos
+        id: fixture
+        run: |
+          set -euo pipefail
+          git config --global protocol.file.allow always
+          FIXTURE_ROOT="$RUNNER_TEMP/ugs-fixture"
+          CHILD="$FIXTURE_ROOT/child"
+          PARENT="$FIXTURE_ROOT/parent"
+          mkdir -p "$CHILD" "$PARENT"
+
+          git -C "$CHILD" init -q -b main
+          git -C "$CHILD" config user.email test@example.com
+          git -C "$CHILD" config user.name test
+          echo "v1" > "$CHILD/README.md"
+          git -C "$CHILD" add README.md
+          git -C "$CHILD" commit -q -m "v1"
+          BASELINE_SHA="$(git -C "$CHILD" rev-parse HEAD)"
+
+          git -C "$PARENT" init -q -b main
+          git -C "$PARENT" config user.email test@example.com
+          git -C "$PARENT" config user.name test
+          git -C "$PARENT" submodule add "$CHILD" vendor/child
+          git -C "$PARENT" commit -q -m "add submodule"
+
+          echo "v2" > "$CHILD/README.md"
+          git -C "$CHILD" commit -q -am "v2"
+          ADVANCED_SHA="$(git -C "$CHILD" rev-parse HEAD)"
+
+          echo "parent=$PARENT" >> "$GITHUB_OUTPUT"
+          echo "baseline=$BASELINE_SHA" >> "$GITHUB_OUTPUT"
+          echo "advanced=$ADVANCED_SHA" >> "$GITHUB_OUTPUT"
+      - name: 🚀 Run update-git-submodules against the fixture
+        id: update
+        working-directory: ${{ steps.fixture.outputs.parent }}
+        env:
+          INPUT_GITMODULESPATH: .gitmodules
+          INPUT_STRATEGY: commit
+          INPUT_SUBMODULES: ""
+          INPUT_TOKEN: ""
+        run: node ${{ github.workspace }}/update-git-submodules/dist/index.mjs
+      - name: ✅ Verify outputs
+        env:
+          BASELINE: ${{ steps.fixture.outputs.baseline }}
+          ADVANCED: ${{ steps.fixture.outputs.advanced }}
+          REMOTE_NAME: ${{ steps.update.outputs['child--remoteName'] }}
+          URL_OUTPUT: ${{ steps.update.outputs['child--url'] }}
+          PREV_OUTPUT: ${{ steps.update.outputs['child--previousCommitSha'] }}
+          LATEST_OUTPUT: ${{ steps.update.outputs['child--latestCommitSha'] }}
+          JSON_OUTPUT: ${{ steps.update.outputs.json }}
+        run: |
+          set -euo pipefail
+          test -n "$JSON_OUTPUT"
+          test "$PREV_OUTPUT" = "$BASELINE"
+          test "$LATEST_OUTPUT" = "$ADVANCED"
+          # url and remoteName must be distinct outputs (regression for original bug)
+          test -n "$URL_OUTPUT"
+          test "$URL_OUTPUT" != "$REMOTE_NAME"
+  release:
+    runs-on: ubuntu-latest
+    if: ${{github.event.workflow_run.conclusion == 'success'}}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: stephansama/actions/update-git-submodules@v1

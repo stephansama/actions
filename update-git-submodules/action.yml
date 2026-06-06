@@ -1,0 +1,33 @@
+name: update-git-submodules
+author: Stephan Randle
+description: Update git submodule(s) to their latest commit or tag
+inputs:
+  gitmodulesPath:
+    required: false
+    default: ".gitmodules"
+    description: Path to the .gitmodules file
+  strategy:
+    required: false
+    default: "commit"
+    description: Update strategy — "commit" or "tag"
+  submodules:
+    required: false
+    default: ""
+    description: Newline-delimited list of submodules to update (default — all)
+  token:
+    required: false
+    default: ${{ github.token }}
+    description: GitHub token used to authenticate submodule git operations. Defaults to the workflow's GITHUB_TOKEN; override with a PAT for submodules in other private repos.
+outputs:
+  json:
+    description: JSON array of all updated submodules
+  matrix:
+    description: Matrix-strategy-shaped object for downstream jobs
+  prBody:
+    description: Markdown table summarizing updates
+runs:
+  using: node20
+  main: ./dist/index.mjs
+branding:
+  icon: git-branch
+  color: red

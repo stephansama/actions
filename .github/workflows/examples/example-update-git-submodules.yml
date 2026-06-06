@@ -1,0 +1,15 @@
+name: update-git-submodules example
+on:
+  workflow_dispatch:
+jobs:
+  example:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: stephansama/actions/update-git-submodules@v1
+        id: update
+      - run: echo "${{ steps.update.outputs.prBody }}"
