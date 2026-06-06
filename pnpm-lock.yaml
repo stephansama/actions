@@ -9,6 +9,9 @@ catalogs:
     '@actions/core':
       specifier: 1.11.1
       version: 1.11.1
+    '@actions/exec':
+      specifier: 1.1.1
+      version: 1.1.1
     '@actions/github':
       specifier: 6.0.1
       version: 6.0.1
@@ -42,6 +45,9 @@ catalogs:
     '@stephansama/eslint-config':
       specifier: 0.2.3
       version: 0.2.3
+    '@stephansama/pnpm-hooks':
+      specifier: 0.1.1
+      version: 0.1.1
     '@stephansama/types-github-action-env':
       specifier: 1.0.3
       version: 1.0.3
@@ -117,6 +123,9 @@ catalogs:
     yaml:
       specifier: 2.8.0
       version: 2.8.0
+    zod:
+      specifier: 3.25.76
+      version: 3.25.76
     zx:
       specifier: 8.7.2
       version: 8.7.2
@@ -126,7 +135,7 @@ importers:
   .:
     dependencies:
       '@stephansama/pnpm-hooks':
-        specifier: 0.1.1
+        specifier: 'catalog:'
         version: 0.1.1(@pnpm/logger@1001.0.1)
     devDependencies:
       '@actions/core':
@@ -260,6 +269,21 @@ importers:
       markdown-table:
         specifier: 'catalog:'
         version: 3.0.4
+
+  update-git-submodules:
+    devDependencies:
+      '@actions/core':
+        specifier: 'catalog:'
+        version: 1.11.1
+      '@actions/exec':
+        specifier: 'catalog:'
+        version: 1.1.1
+      markdown-table:
+        specifier: 'catalog:'
+        version: 3.0.4
+      zod:
+        specifier: 'catalog:'
+        version: 3.25.76
 
 packages:
 
@@ -6649,6 +6673,9 @@ packages:
 
   zod@3.22.3:
     resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
+
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
   zod@4.2.1:
     resolution: {integrity: sha512-0wZ1IRqGGhMP76gLqz8EyfBXKk0J2qo2+H3fi4mcUP/KtTocoX08nmIAHl1Z2kJIZbZee8KOpBCSNPRgauucjw==}
@@ -13585,6 +13612,8 @@ snapshots:
       zod: 4.2.1
 
   zod@3.22.3: {}
+
+  zod@3.25.76: {}
 
   zod@4.2.1: {}
 

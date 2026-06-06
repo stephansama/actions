@@ -4,6 +4,7 @@ packages:
 
 catalog:
   "@actions/core": 1.11.1
+  "@actions/exec": 1.1.1
   "@actions/github": 6.0.1
   "@catppuccin/vitepress": 0.1.2
   "@commitlint/cli": 19.8.1
@@ -41,6 +42,7 @@ catalog:
   vitest: 3.2.4
   wrangler: 4.27.0
   yaml: 2.8.0
+  zod: 3.25.76
   zx: 8.7.2
 
 ignoredBuiltDependencies:
