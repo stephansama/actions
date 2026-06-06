@@ -9,6 +9,8 @@ export type Strategy = z.infer<typeof StrategySchema>;
 
 const AUTH_HEADER_CONFIG_KEY = "http.https://github.com/.extraheader";
 
+const INSTEAD_OF_CONFIG_KEY = "url.https://github.com/.insteadOf";
+
 const GITHUB_URL_PATTERNS = [
 	/^https?:\/\/(?:[^@/]+@)?github\.com\/([^/]+\/[^/]+?)(?:\.git)?\/?$/,
 	/^git@github\.com:([^/]+\/[^/]+?)(?:\.git)?\/?$/,
@@ -89,6 +91,11 @@ export async function cleanupAuth(token: string): Promise<void> {
 		["config", "--global", "--unset-all", AUTH_HEADER_CONFIG_KEY],
 		{ ignoreReturnCode: true },
 	);
+	await exec.getExecOutput(
+		"git",
+		["config", "--global", "--unset-all", INSTEAD_OF_CONFIG_KEY],
+		{ ignoreReturnCode: true },
+	);
 }
 
 export async function configureAuth(token: string): Promise<void> {
@@ -99,6 +106,21 @@ export async function configureAuth(token: string): Promise<void> {
 		"--global",
 		AUTH_HEADER_CONFIG_KEY,
 		`AUTHORIZATION: basic ${basic}`,
+	]);
+	// Rewrite SSH submodule URLs to HTTPS so the extraheader applies to them too.
+	await exec.getExecOutput("git", [
+		"config",
+		"--global",
+		"--add",
+		INSTEAD_OF_CONFIG_KEY,
+		"git@github.com:",
+	]);
+	await exec.getExecOutput("git", [
+		"config",
+		"--global",
+		"--add",
+		INSTEAD_OF_CONFIG_KEY,
+		"ssh://git@github.com/",
 	]);
 }
 
@@ -145,13 +167,27 @@ export async function getLatestTag(cwd: string): Promise<string | undefined> {
 		cwd,
 		ignoreReturnCode: true,
 	});
-	const { exitCode, stdout } = await exec.getExecOutput(
+	// Prefer the closest tag reachable from the just-fetched ref: respects branch
+	// tracking (no surprise tags from unrelated branches) and still sees tags
+	// that aren't yet reachable from local HEAD.
+	const described = await exec.getExecOutput(
+		"git",
+		["describe", "--tags", "--abbrev=0", "FETCH_HEAD"],
+		{ cwd, ignoreReturnCode: true },
+	);
+	if (described.exitCode === 0) {
+		const tag = described.stdout.trim();
+		if (tag) return tag;
+	}
+	// Fallback when FETCH_HEAD isn't set or describe can't resolve a tag —
+	// e.g. an initial fetch with no upstream branch context.
+	const sorted = await exec.getExecOutput(
 		"git",
 		["tag", "--sort=-v:refname"],
 		{ cwd, ignoreReturnCode: true },
 	);
-	if (exitCode !== 0) return undefined;
-	return stdout.split("\n")[0]?.trim() || undefined;
+	if (sorted.exitCode !== 0) return undefined;
+	return sorted.stdout.split("\n")[0]?.trim() || undefined;
 }
 
 export async function getParentRemoteUrl(

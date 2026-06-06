@@ -9,12 +9,18 @@ on:
   workflow_dispatch:
 env:
   HUSKY: 0
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   preview:
     runs-on: ubuntu-latest
-    if: ${{github.event.workflow_run.conclusion != 'success'}}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -62,6 +68,7 @@ jobs:
           INPUT_GITMODULESPATH: .gitmodules
           INPUT_STRATEGY: commit
           INPUT_SUBMODULES: ""
+          # No token needed — the fixture uses local file:// repositories.
           INPUT_TOKEN: ""
         run: node ${{ github.workspace }}/update-git-submodules/dist/index.mjs
       - name: ✅ Verify outputs
@@ -100,11 +107,3 @@ jobs:
           test -n "$URL_OUTPUT"
           # url and remoteName must be distinct outputs (regression for original bug)
           test "$URL_OUTPUT" != "$REMOTE_NAME"
-  release:
-    runs-on: ubuntu-latest
-    if: ${{github.event.workflow_run.conclusion == 'success'}}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: stephansama/actions/update-git-submodules@v1

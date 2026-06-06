@@ -99,13 +99,33 @@ describe("configureAuth / cleanupAuth", () => {
 		]);
 	});
 
+	it("configureAuth adds insteadOf rewrites so SSH submodule URLs use the extraheader", async () => {
+		mocks.getExecOutput.mockResolvedValue(okExec());
+		const { configureAuth } = await import("./index.js");
+		await configureAuth("ghs_tok");
+		expect(mocks.getExecOutput).toHaveBeenCalledWith("git", [
+			"config",
+			"--global",
+			"--add",
+			"url.https://github.com/.insteadOf",
+			"git@github.com:",
+		]);
+		expect(mocks.getExecOutput).toHaveBeenCalledWith("git", [
+			"config",
+			"--global",
+			"--add",
+			"url.https://github.com/.insteadOf",
+			"ssh://git@github.com/",
+		]);
+	});
+
 	it("cleanupAuth no-ops without a token", async () => {
 		const { cleanupAuth } = await import("./index.js");
 		await cleanupAuth("");
 		expect(mocks.getExecOutput).not.toHaveBeenCalled();
 	});
 
-	it("cleanupAuth unsets the global extraheader git config", async () => {
+	it("cleanupAuth unsets both the extraheader and the insteadOf rewrites", async () => {
 		mocks.getExecOutput.mockResolvedValue(okExec());
 		const { cleanupAuth } = await import("./index.js");
 		await cleanupAuth("ghs_tok");
@@ -116,6 +136,16 @@ describe("configureAuth / cleanupAuth", () => {
 				"--global",
 				"--unset-all",
 				"http.https://github.com/.extraheader",
+			],
+			{ ignoreReturnCode: true },
+		);
+		expect(mocks.getExecOutput).toHaveBeenCalledWith(
+			"git",
+			[
+				"config",
+				"--global",
+				"--unset-all",
+				"url.https://github.com/.insteadOf",
 			],
 			{ ignoreReturnCode: true },
 		);
@@ -292,17 +322,44 @@ describe("git helpers", () => {
 		expect(await getPreviousTag("path")).toBe("v1.2.3");
 	});
 
-	it("getLatestTag returns the highest version-sorted tag (not the one reachable from HEAD)", async () => {
+	it("getLatestTag returns the tag reachable from the just-fetched ref (not an unrelated-branch tag)", async () => {
 		const { getLatestTag } = await import("./index.js");
 		mocks.getExecOutput.mockImplementation(
 			(_cmd: string, arguments_: string[]) => {
 				if (arguments_[0] === "fetch")
 					return Promise.resolve(okExec(""));
 				if (
+					arguments_[0] === "describe" &&
+					arguments_.at(-1) === "FETCH_HEAD"
+				) {
+					return Promise.resolve(okExec("v1.5.0\n"));
+				}
+				if (
 					arguments_[0] === "tag" &&
 					arguments_[1] === "--sort=-v:refname"
 				) {
+					// Would surface v2.0.0 if fallback was hit — but reachability check should pick v1.5.0
 					return Promise.resolve(okExec("v2.0.0\nv1.5.0\nv1.0.0\n"));
+				}
+				return Promise.resolve(okExec(""));
+			},
+		);
+		expect(await getLatestTag("path")).toBe("v1.5.0");
+	});
+
+	it("getLatestTag falls back to version-sort when describe FETCH_HEAD fails", async () => {
+		const { getLatestTag } = await import("./index.js");
+		mocks.getExecOutput.mockImplementation(
+			(_cmd: string, arguments_: string[]) => {
+				if (arguments_[0] === "fetch")
+					return Promise.resolve(okExec(""));
+				if (arguments_[0] === "describe")
+					return Promise.resolve(okExec("", 128));
+				if (
+					arguments_[0] === "tag" &&
+					arguments_[1] === "--sort=-v:refname"
+				) {
+					return Promise.resolve(okExec("v2.0.0\nv1.5.0\n"));
 				}
 				return Promise.resolve(okExec(""));
 			},
@@ -316,6 +373,8 @@ describe("git helpers", () => {
 			(_cmd: string, arguments_: string[]) => {
 				if (arguments_[0] === "fetch")
 					return Promise.resolve(okExec(""));
+				if (arguments_[0] === "describe")
+					return Promise.resolve(okExec("", 128));
 				if (arguments_[0] === "tag") return Promise.resolve(okExec(""));
 				return Promise.resolve(okExec(""));
 			},
@@ -385,6 +444,11 @@ describe("filterSubmodules", () => {
 	it("filters by path", async () => {
 		const { filterSubmodules } = await import("./index.js");
 		expect(filterSubmodules(enriched, ["vendor/b"])).toEqual([enriched[1]]);
+	});
+
+	it("accepts mixed name and path filters in one call", async () => {
+		const { filterSubmodules } = await import("./index.js");
+		expect(filterSubmodules(enriched, ["a", "vendor/b"])).toEqual(enriched);
 	});
 
 	it("keeps untagged submodules so tag strategy can transition them on first run", async () => {
@@ -551,6 +615,55 @@ describe("updateToLatestCommit", () => {
 		expect(indexOfUpdateA).toBeLessThan(indexOfUpdateB);
 		expect(result[0]?.latestCommitSha).toBe("a".repeat(40));
 		expect(result[1]?.latestCommitSha).toBe("b".repeat(40));
+	});
+
+	it("propagates a git failure and stops the sequence", async () => {
+		const enriched = [
+			{
+				name: "a",
+				path: "vendor/a",
+				previousCommitSha: "a".repeat(40),
+				previousCommitShaHasTag: false,
+				previousShortCommitSha: "aaa0000",
+				previousTag: undefined,
+				remoteName: "o/a",
+				url: "https://github.com/o/a",
+			},
+			{
+				name: "b",
+				path: "vendor/b",
+				previousCommitSha: "b".repeat(40),
+				previousCommitShaHasTag: false,
+				previousShortCommitSha: "bbb0000",
+				previousTag: undefined,
+				remoteName: "o/b",
+				url: "https://github.com/o/b",
+			},
+		];
+		const callOrder: string[] = [];
+		mocks.getExecOutput.mockImplementation(
+			(_cmd: string, arguments_: string[]) => {
+				callOrder.push(arguments_.join(" "));
+				if (
+					arguments_.join(" ") ===
+					"submodule update --remote vendor/b"
+				) {
+					return Promise.reject(new Error("submodule update failed"));
+				}
+				if (arguments_[0] === "rev-parse") {
+					return Promise.resolve(okExec(`${"a".repeat(40)}\n`));
+				}
+				return Promise.resolve(okExec(""));
+			},
+		);
+
+		const { updateToLatestCommit } = await import("./index.js");
+		await expect(updateToLatestCommit(enriched)).rejects.toThrow(
+			"submodule update failed",
+		);
+		// a's update completed before b's update failed
+		expect(callOrder).toContain("submodule update --remote vendor/a");
+		expect(callOrder).toContain("submodule update --remote vendor/b");
 	});
 });
 
