@@ -205,6 +205,23 @@ describe("getRemoteName", () => {
 			getRemoteName("../sibling.git", "file:///tmp/parent"),
 		).toBeUndefined();
 	});
+
+	it("returns undefined for non-relative non-GitHub URL even when parent URL is given", async () => {
+		const { getRemoteName } = await import("./index.js");
+		expect(
+			getRemoteName(
+				"https://gitlab.com/owner/repo.git",
+				"https://github.com/owner/parent.git",
+			),
+		).toBeUndefined();
+	});
+
+	it("returns undefined when the parent URL fails to parse as a URL", async () => {
+		const { getRemoteName } = await import("./index.js");
+		expect(
+			getRemoteName("../sibling.git", "not::a::valid::url"),
+		).toBeUndefined();
+	});
 });
 
 describe("parseGitmodulesFile", () => {
@@ -281,6 +298,24 @@ describe("parseGitmodulesFile", () => {
 		expect(result[0]?.remoteName).toBe("owner/sibling");
 	});
 
+	it("ignores non-submodule config lines in the output", async () => {
+		mocks.getExecOutput.mockResolvedValue(
+			okExec(
+				[
+					"core.repositoryformatversion=0",
+					"submodule.icons.path=vendor/icons",
+					"submodule.icons.url=https://github.com/o/icons.git",
+					"submodule.icons.branch=main",
+					"",
+				].join("\n"),
+			),
+		);
+		const { parseGitmodulesFile } = await import("./index.js");
+		const result = await parseGitmodulesFile(".gitmodules");
+		expect(result).toHaveLength(1);
+		expect(result[0]?.name).toBe("icons");
+	});
+
 	it("skips submodule entries missing path or url", async () => {
 		mocks.getExecOutput.mockResolvedValue(
 			okExec(
@@ -320,6 +355,12 @@ describe("git helpers", () => {
 		mocks.getExecOutput.mockResolvedValue(okExec("v1.2.3\n"));
 		const { getPreviousTag } = await import("./index.js");
 		expect(await getPreviousTag("path")).toBe("v1.2.3");
+	});
+
+	it("getPreviousTag returns undefined when stdout is empty even with exit 0", async () => {
+		mocks.getExecOutput.mockResolvedValue(okExec("   \n"));
+		const { getPreviousTag } = await import("./index.js");
+		expect(await getPreviousTag("path")).toBeUndefined();
 	});
 
 	it("getLatestTag returns the tag reachable from the just-fetched ref (not an unrelated-branch tag)", async () => {
@@ -403,6 +444,12 @@ describe("git helpers", () => {
 		mocks.getExecOutput.mockResolvedValueOnce(okExec("v1.0.0\n"));
 		expect(await hasTag("path", "sha")).toBe(true);
 		mocks.getExecOutput.mockResolvedValueOnce(okExec(""));
+		expect(await hasTag("path", "sha")).toBe(false);
+	});
+
+	it("hasTag returns false when git exits non-zero", async () => {
+		const { hasTag } = await import("./index.js");
+		mocks.getExecOutput.mockResolvedValueOnce(okExec("", 128));
 		expect(await hasTag("path", "sha")).toBe(false);
 	});
 });
@@ -557,6 +604,34 @@ describe("buildPrBody", () => {
 			"[v1.0.0...v2.0.0](https://github.com/owner/icons/compare/v1.0.0...v2.0.0)",
 		);
 	});
+
+	it("renders a commit-strategy row without a compare link when remoteName is missing", async () => {
+		const { buildPrBody } = await import("./index.js");
+		const md = buildPrBody(
+			[{ ...base, latestTag: undefined, remoteName: undefined }],
+			"commit",
+		);
+		expect(md).toContain("abc0000 → def0000");
+		expect(md).not.toContain("compare/");
+		expect(md).not.toContain("[icons](");
+	});
+
+	it("renders a tag-strategy row without a compare link when remoteName is missing", async () => {
+		const { buildPrBody } = await import("./index.js");
+		const md = buildPrBody(
+			[
+				{
+					...base,
+					latestTag: "v2.0.0",
+					previousTag: "v1.0.0",
+					remoteName: undefined,
+				},
+			],
+			"tag",
+		);
+		expect(md).toContain("v1.0.0 → v2.0.0");
+		expect(md).not.toContain("compare/");
+	});
 });
 
 describe("updateToLatestCommit", () => {
@@ -667,6 +742,152 @@ describe("updateToLatestCommit", () => {
 	});
 });
 
+describe("updateToLatestTag", () => {
+	const enriched = [
+		{
+			name: "a",
+			path: "vendor/a",
+			previousCommitSha: "a".repeat(40),
+			previousCommitShaHasTag: false,
+			previousShortCommitSha: "aaa0000",
+			previousTag: "v1.0.0",
+			remoteName: "o/a",
+			url: "https://github.com/o/a",
+		},
+		{
+			name: "b",
+			path: "vendor/b",
+			previousCommitSha: "b".repeat(40),
+			previousCommitShaHasTag: false,
+			previousShortCommitSha: "bbb0000",
+			previousTag: "v1.0.0",
+			remoteName: "o/b",
+			url: "https://github.com/o/b",
+		},
+	];
+
+	it("resets each submodule to its latest tag and reports updated: true", async () => {
+		const tagPerCwd: Record<string, string> = {
+			"vendor/a": "v1.5.0",
+			"vendor/b": "v2.0.0",
+		};
+		const newShaPerCwd: Record<string, string> = {
+			"vendor/a": "1".repeat(40),
+			"vendor/b": "2".repeat(40),
+		};
+		mocks.getExecOutput.mockImplementation(
+			(
+				_cmd: string,
+				arguments_: string[],
+				options?: { cwd?: string },
+			) => {
+				if (arguments_[0] === "fetch")
+					return Promise.resolve(okExec(""));
+				if (
+					arguments_[0] === "describe" &&
+					arguments_.at(-1) === "FETCH_HEAD"
+				) {
+					return Promise.resolve(
+						okExec(`${tagPerCwd[options?.cwd ?? ""]}\n`),
+					);
+				}
+				if (arguments_[0] === "reset") {
+					return Promise.resolve(okExec(""));
+				}
+				if (arguments_[0] === "rev-parse") {
+					return Promise.resolve(
+						okExec(`${newShaPerCwd[options?.cwd ?? ""]}\n`),
+					);
+				}
+				return Promise.resolve(okExec(""));
+			},
+		);
+
+		const { updateToLatestTag } = await import("./index.js");
+		const result = await updateToLatestTag(enriched);
+
+		expect(result[0]).toMatchObject({
+			latestCommitSha: "1".repeat(40),
+			latestTag: "v1.5.0",
+			updated: true,
+		});
+		expect(result[1]).toMatchObject({
+			latestCommitSha: "2".repeat(40),
+			latestTag: "v2.0.0",
+			updated: true,
+		});
+	});
+
+	it("leaves the submodule untouched when no tag is found", async () => {
+		mocks.getExecOutput.mockImplementation(
+			(_cmd: string, arguments_: string[]) => {
+				if (arguments_[0] === "fetch")
+					return Promise.resolve(okExec(""));
+				if (arguments_[0] === "describe")
+					return Promise.resolve(okExec("", 128));
+				if (arguments_[0] === "tag") return Promise.resolve(okExec(""));
+				return Promise.resolve(okExec(""));
+			},
+		);
+
+		const { updateToLatestTag } = await import("./index.js");
+		const first = enriched[0];
+		if (!first) throw new Error("test fixture missing");
+		const result = await updateToLatestTag([first]);
+
+		expect(result[0]).toMatchObject({
+			latestCommitSha: first.previousCommitSha,
+			latestShortCommitSha: first.previousShortCommitSha,
+			latestTag: undefined,
+			updated: false,
+		});
+		// reset --hard must NOT be invoked when there's no tag to land on
+		const resetCalls = mocks.getExecOutput.mock.calls.filter((call) => {
+			const arguments_ = call[1] as string[];
+			return arguments_[0] === "reset";
+		});
+		expect(resetCalls).toHaveLength(0);
+	});
+
+	it("processes submodules sequentially", async () => {
+		const callOrder: string[] = [];
+		mocks.getExecOutput.mockImplementation(
+			(
+				_cmd: string,
+				arguments_: string[],
+				options?: { cwd?: string },
+			) => {
+				callOrder.push(
+					`${options?.cwd ?? "."}::${arguments_.join(" ")}`,
+				);
+				if (arguments_[0] === "fetch")
+					return Promise.resolve(okExec(""));
+				if (
+					arguments_[0] === "describe" &&
+					arguments_.at(-1) === "FETCH_HEAD"
+				) {
+					return Promise.resolve(okExec("v1.0.0\n"));
+				}
+				if (arguments_[0] === "reset")
+					return Promise.resolve(okExec(""));
+				if (arguments_[0] === "rev-parse") {
+					return Promise.resolve(okExec(`${"f".repeat(40)}\n`));
+				}
+				return Promise.resolve(okExec(""));
+			},
+		);
+
+		const { updateToLatestTag } = await import("./index.js");
+		await updateToLatestTag(enriched);
+
+		const lastA = callOrder.findLastIndex((c) =>
+			c.startsWith("vendor/a::"),
+		);
+		const firstB = callOrder.findIndex((c) => c.startsWith("vendor/b::"));
+		expect(lastA).toBeLessThan(firstB);
+	});
+});
+
 describe("run", () => {
 	it("orchestrates load → parse → update → outputs", async () => {
 		const inputs: Record<string, string> = {
@@ -733,6 +954,84 @@ describe("run", () => {
 		expect(outputs["vendor/icons--latestCommitSha"]).toBe(latestSha);
 	});
 
+	it("orchestrates the tag strategy end-to-end", async () => {
+		const inputs: Record<string, string> = {
+			gitmodulesPath: ".gitmodules",
+			strategy: "tag",
+			submodules: "",
+			token: "",
+		};
+		mocks.getInput.mockImplementation((name: string) => inputs[name] ?? "");
+
+		const previousSha = "abc1234567890000000000000000000000000000";
+		const latestSha = "def4567890000000000000000000000000000000";
+		const previousTag = "v1.0.0";
+		const latestTag = "v2.0.0";
+		let revParseCount = 0;
+		mocks.getExecOutput.mockImplementation(
+			(_cmd: string, arguments_: string[]) => {
+				if (
+					arguments_[0] === "config" &&
+					arguments_[1] === "-f" &&
+					arguments_[3] === "--list"
+				) {
+					return Promise.resolve(
+						okExec(
+							[
+								"submodule.icons.path=vendor/icons",
+								"submodule.icons.url=https://github.com/owner/icons.git",
+							].join("\n"),
+						),
+					);
+				}
+				if (arguments_[0] === "remote" && arguments_[1] === "get-url") {
+					return Promise.resolve(okExec("", 128));
+				}
+				if (arguments_[0] === "rev-parse") {
+					revParseCount++;
+					return Promise.resolve(
+						okExec(
+							revParseCount === 1
+								? `${previousSha}\n`
+								: `${latestSha}\n`,
+						),
+					);
+				}
+				if (
+					arguments_[0] === "describe" &&
+					arguments_.at(-1) === "FETCH_HEAD"
+				) {
+					return Promise.resolve(okExec(`${latestTag}\n`));
+				}
+				if (arguments_[0] === "describe") {
+					return Promise.resolve(okExec(`${previousTag}\n`));
+				}
+				if (arguments_[0] === "tag") return Promise.resolve(okExec(""));
+				if (arguments_[0] === "fetch")
+					return Promise.resolve(okExec(""));
+				if (arguments_[0] === "reset")
+					return Promise.resolve(okExec(""));
+				return Promise.resolve(okExec(""));
+			},
+		);
+
+		const { run } = await import("./index.js");
+		await run();
+
+		expect(mocks.setFailed).not.toHaveBeenCalled();
+		const outputs = Object.fromEntries(
+			mocks.setOutput.mock.calls.map((call) => [
+				callKey(call),
+				callValue(call),
+			]),
+		);
+		expect(outputs.json).toContain(latestTag);
+		expect(outputs.prBody).toContain("Previous Tag");
+		expect(outputs["icons--latestTag"]).toBe(latestTag);
+		expect(outputs["icons--previousTag"]).toBe(previousTag);
+		expect(outputs["icons--latestCommitSha"]).toBe(latestSha);
+	});
+
 	it("calls setFailed and still cleans up auth on error", async () => {
 		const inputs: Record<string, string> = {
 			gitmodulesPath: ".gitmodules",
@@ -764,6 +1063,33 @@ describe("run", () => {
 			);
 		});
 		expect(cleanupCall).toBeDefined();
+	});
+
+	it("setFailed handles non-Error rejections by stringifying them", async () => {
+		const inputs: Record<string, string> = {
+			gitmodulesPath: ".gitmodules",
+			strategy: "commit",
+			submodules: "",
+			token: "",
+		};
+		mocks.getInput.mockImplementation((name: string) => inputs[name] ?? "");
+		mocks.getExecOutput.mockImplementation(
+			(_cmd: string, arguments_: string[]) => {
+				if (
+					arguments_[0] === "config" &&
+					arguments_.includes("--list")
+				) {
+					// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- testing non-Error rejection path
+					return Promise.reject("plain-string-rejection");
+				}
+				return Promise.resolve(okExec(""));
+			},
+		);
+
+		const { run } = await import("./index.js");
+		await run();
+
+		expect(mocks.setFailed).toHaveBeenCalledWith("plain-string-rejection");
 	});
 });
 
