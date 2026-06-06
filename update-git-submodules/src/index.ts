@@ -1,30 +1,28 @@
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
-import * as ini from "ini";
 import { markdownTable } from "markdown-table";
-import * as fs from "node:fs/promises";
 import * as url from "node:url";
 import { z } from "zod";
 
 const StrategySchema = z.enum(["commit", "tag"]);
 export type Strategy = z.infer<typeof StrategySchema>;
 
-const SubmoduleEntrySchema = z.object({
-	branch: z.string().optional(),
-	path: z.string(),
-	url: z.string(),
-});
-
 const AUTH_HEADER_CONFIG_KEY = "http.https://github.com/.extraheader";
 
 const GITHUB_URL_PATTERNS = [
-	/^https?:\/\/github\.com\/([^/]+\/[^/]+?)(?:\.git)?\/?$/,
+	/^https?:\/\/(?:[^@/]+@)?github\.com\/([^/]+\/[^/]+?)(?:\.git)?\/?$/,
 	/^git@github\.com:([^/]+\/[^/]+?)(?:\.git)?\/?$/,
 	/^ssh:\/\/git@github\.com\/([^/]+\/[^/]+?)(?:\.git)?\/?$/,
 	/^git:\/\/github\.com\/([^/]+\/[^/]+?)(?:\.git)?\/?$/,
 ];
 
-const SUBMODULE_SECTION_PATTERN = /^submodule\s+"(.+)"$/;
+const SSH_URL_PATTERN = /^([^@\s]+)@([^:\s]+):(.+)$/;
+
+const GIT_CONFIG_LINE_PATTERN = /^submodule\.(.+)\.(path|url)=(.*)$/;
+
+const TRAILING_SLASH_PATTERN = /\/$/;
+
+const NEWLINE_PATTERN = /\r?\n/;
 
 export type EnrichedSubmodule = ParsedSubmodule & {
 	previousCommitSha: string;
@@ -88,7 +86,7 @@ export async function cleanupAuth(token: string): Promise<void> {
 	if (!token) return;
 	await exec.getExecOutput(
 		"git",
-		["config", "--local", "--unset-all", AUTH_HEADER_CONFIG_KEY],
+		["config", "--global", "--unset-all", AUTH_HEADER_CONFIG_KEY],
 		{ ignoreReturnCode: true },
 	);
 }
@@ -98,7 +96,7 @@ export async function configureAuth(token: string): Promise<void> {
 	const basic = Buffer.from(`x-access-token:${token}`).toString("base64");
 	await exec.getExecOutput("git", [
 		"config",
-		"--local",
+		"--global",
 		AUTH_HEADER_CONFIG_KEY,
 		`AUTHORIZATION: basic ${basic}`,
 	]);
@@ -127,18 +125,11 @@ export async function enrichSubmodule(
 export function filterSubmodules(
 	submodules: EnrichedSubmodule[],
 	filter: string[],
-	strategy: Strategy,
 ): EnrichedSubmodule[] {
-	let result = submodules;
-	if (filter.length > 0) {
-		result = result.filter(
-			(s) => filter.includes(s.name) || filter.includes(s.path),
-		);
-	}
-	if (strategy === "tag") {
-		result = result.filter((s) => s.previousTag !== undefined);
-	}
-	return result;
+	if (filter.length === 0) return submodules;
+	return submodules.filter(
+		(s) => filter.includes(s.name) || filter.includes(s.path),
+	);
 }
 
 export async function getCommit(cwd: string): Promise<[string, string]> {
@@ -154,7 +145,25 @@ export async function getLatestTag(cwd: string): Promise<string | undefined> {
 		cwd,
 		ignoreReturnCode: true,
 	});
-	return getPreviousTag(cwd);
+	const { exitCode, stdout } = await exec.getExecOutput(
+		"git",
+		["tag", "--sort=-v:refname"],
+		{ cwd, ignoreReturnCode: true },
+	);
+	if (exitCode !== 0) return undefined;
+	return stdout.split("\n")[0]?.trim() || undefined;
+}
+
+export async function getParentRemoteUrl(
+	cwd = ".",
+): Promise<string | undefined> {
+	const { exitCode, stdout } = await exec.getExecOutput(
+		"git",
+		["remote", "get-url", "origin"],
+		{ cwd, ignoreReturnCode: true },
+	);
+	if (exitCode !== 0) return undefined;
+	return stdout.trim() || undefined;
 }
 
 export async function getPreviousTag(cwd: string): Promise<string | undefined> {
@@ -167,12 +176,25 @@ export async function getPreviousTag(cwd: string): Promise<string | undefined> {
 	return stdout.trim() || undefined;
 }
 
-export function getRemoteName(repoUrl: string): string | undefined {
-	for (const pattern of GITHUB_URL_PATTERNS) {
-		const match = repoUrl.match(pattern);
-		if (match) return match[1];
+export function getRemoteName(
+	repoUrl: string,
+	parentRemoteUrl?: string,
+): string | undefined {
+	const direct = matchGitHubUrl(repoUrl);
+	if (direct) return direct;
+	if (!parentRemoteUrl) return undefined;
+	if (!repoUrl.startsWith("./") && !repoUrl.startsWith("../"))
+		return undefined;
+	try {
+		const base = normalizeGitUrl(parentRemoteUrl);
+		const baseWithSlash = base.endsWith("/") ? base : `${base}/`;
+		const resolved = new URL(repoUrl, baseWithSlash);
+		return matchGitHubUrl(
+			resolved.href.replace(TRAILING_SLASH_PATTERN, ""),
+		);
+	} catch {
+		return undefined;
 	}
-	return undefined;
 }
 
 export async function hasTag(cwd: string, sha: string): Promise<boolean> {
@@ -202,35 +224,34 @@ export function loadInputs(): Inputs {
 
 export async function parseGitmodulesFile(
 	filePath: string,
+	parentRemoteUrl?: string,
 ): Promise<ParsedSubmodule[]> {
-	const contents = await fs.readFile(filePath, "utf8");
-	const parsed = ini.parse(contents) as Record<string, unknown>;
-	const entries: Array<[string, unknown]> = [];
-
-	for (const [key, value] of Object.entries(parsed)) {
-		const flatMatch = key.match(SUBMODULE_SECTION_PATTERN);
-		if (flatMatch) {
-			entries.push([flatMatch[1], value]);
-			continue;
-		}
-		if (key === "submodule" && value && typeof value === "object") {
-			for (const [name, raw] of Object.entries(
-				value as Record<string, unknown>,
-			)) {
-				entries.push([name, raw]);
-			}
-		}
+	const { stdout } = await exec.getExecOutput("git", [
+		"config",
+		"-f",
+		filePath,
+		"--list",
+	]);
+	const submodules = new Map<string, { path?: string; url?: string }>();
+	for (const line of stdout.split(NEWLINE_PATTERN)) {
+		const m = line.match(GIT_CONFIG_LINE_PATTERN);
+		if (!m) continue;
+		const [, name, key, value] = m;
+		const entry = submodules.get(name) ?? {};
+		entry[key as "path" | "url"] = value;
+		submodules.set(name, entry);
 	}
-
-	return entries.map(([name, raw]) => {
-		const entry = SubmoduleEntrySchema.parse(raw);
-		return {
+	const result: ParsedSubmodule[] = [];
+	for (const [name, s] of submodules) {
+		if (!s.path || !s.url) continue;
+		result.push({
 			name,
-			path: entry.path,
-			remoteName: getRemoteName(entry.url),
-			url: entry.url,
-		};
-	});
+			path: s.path,
+			remoteName: getRemoteName(s.url, parentRemoteUrl),
+			url: s.url,
+		});
+	}
+	return result;
 }
 
 export async function run(): Promise<void> {
@@ -240,15 +261,16 @@ export async function run(): Promise<void> {
 		token = inputs.token;
 		await configureAuth(token);
 
-		const parsed = await parseGitmodulesFile(inputs.gitmodulesPath);
-		const enriched = await Promise.all(
-			parsed.map(async (s) => enrichSubmodule(s)),
+		const parentRemoteUrl = await getParentRemoteUrl();
+		const parsed = await parseGitmodulesFile(
+			inputs.gitmodulesPath,
+			parentRemoteUrl,
 		);
-		const filtered = filterSubmodules(
-			enriched,
-			inputs.submodules,
-			inputs.strategy,
-		);
+		const enriched: EnrichedSubmodule[] = [];
+		for (const s of parsed) {
+			enriched.push(await enrichSubmodule(s));
+		}
+		const filtered = filterSubmodules(enriched, inputs.submodules);
 
 		const records =
 			inputs.strategy === "tag"
@@ -299,58 +321,68 @@ export function setDynamicOutputs(
 export async function updateToLatestCommit(
 	submodules: EnrichedSubmodule[],
 ): Promise<UpdatedSubmodule[]> {
-	return Promise.all(
-		submodules.map(async (s) => {
-			await exec.getExecOutput("git", [
-				"submodule",
-				"update",
-				"--remote",
-				s.path,
-			]);
-			const [latestCommitSha, latestShortCommitSha] = await getCommit(
-				s.path,
-			);
-			return {
-				...s,
-				latestCommitSha,
-				latestShortCommitSha,
-				latestTag: undefined,
-				updated: latestCommitSha !== s.previousCommitSha,
-			};
-		}),
-	);
+	const records: UpdatedSubmodule[] = [];
+	for (const s of submodules) {
+		await exec.getExecOutput("git", [
+			"submodule",
+			"update",
+			"--remote",
+			s.path,
+		]);
+		const [latestCommitSha, latestShortCommitSha] = await getCommit(s.path);
+		records.push({
+			...s,
+			latestCommitSha,
+			latestShortCommitSha,
+			latestTag: undefined,
+			updated: latestCommitSha !== s.previousCommitSha,
+		});
+	}
+	return records;
 }
 
 export async function updateToLatestTag(
 	submodules: EnrichedSubmodule[],
 ): Promise<UpdatedSubmodule[]> {
-	return Promise.all(
-		submodules.map(async (s) => {
-			const latestTag = await getLatestTag(s.path);
-			if (!latestTag) {
-				return {
-					...s,
-					latestCommitSha: s.previousCommitSha,
-					latestShortCommitSha: s.previousShortCommitSha,
-					latestTag: undefined,
-					updated: false,
-				};
-			}
-			await exec.getExecOutput("git", ["reset", "--hard", latestTag], {
-				cwd: s.path,
-			});
-			const [latestCommitSha, latestShortCommitSha] = await getCommit(
-				s.path,
-			);
-			return {
+	const records: UpdatedSubmodule[] = [];
+	for (const s of submodules) {
+		const latestTag = await getLatestTag(s.path);
+		if (!latestTag) {
+			records.push({
 				...s,
-				latestCommitSha,
-				latestShortCommitSha,
-				latestTag,
-				updated: latestTag !== s.previousTag,
-			};
-		}),
-	);
+				latestCommitSha: s.previousCommitSha,
+				latestShortCommitSha: s.previousShortCommitSha,
+				latestTag: undefined,
+				updated: false,
+			});
+			continue;
+		}
+		await exec.getExecOutput("git", ["reset", "--hard", latestTag], {
+			cwd: s.path,
+		});
+		const [latestCommitSha, latestShortCommitSha] = await getCommit(s.path);
+		records.push({
+			...s,
+			latestCommitSha,
+			latestShortCommitSha,
+			latestTag,
+			updated: latestTag !== s.previousTag,
+		});
+	}
+	return records;
+}
+
+function matchGitHubUrl(repoUrl: string): string | undefined {
+	for (const pattern of GITHUB_URL_PATTERNS) {
+		const match = repoUrl.match(pattern);
+		if (match) return match[1];
+	}
+	return undefined;
+}
+
+function normalizeGitUrl(u: string): string {
+	const m = u.match(SSH_URL_PATTERN);
+	return m ? `ssh://${m[1]}@${m[2]}/${m[3]}` : u;
 }
 
 const argv = process.argv.at(1);

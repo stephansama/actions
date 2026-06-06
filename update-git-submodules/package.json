@@ -8,8 +8,6 @@
 	"devDependencies": {
 		"@actions/core": "catalog:",
 		"@actions/exec": "catalog:",
-		"@types/ini": "catalog:",
-		"ini": "catalog:",
 		"markdown-table": "catalog:",
 		"zod": "catalog:"
 	},
