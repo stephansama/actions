@@ -45,7 +45,7 @@ jobs:
           git -C "$PARENT" init -q -b main
           git -C "$PARENT" config user.email test@example.com
           git -C "$PARENT" config user.name test
-          git -C "$PARENT" submodule add "$CHILD" vendor/child
+          git -C "$PARENT" submodule add --name child -b main "$CHILD" vendor/child
           git -C "$PARENT" commit -q -m "add submodule"
 
           echo "v2" > "$CHILD/README.md"
@@ -66,20 +66,39 @@ jobs:
         run: node ${{ github.workspace }}/update-git-submodules/dist/index.mjs
       - name: ✅ Verify outputs
         env:
+          PARENT: ${{ steps.fixture.outputs.parent }}
           BASELINE: ${{ steps.fixture.outputs.baseline }}
           ADVANCED: ${{ steps.fixture.outputs.advanced }}
           REMOTE_NAME: ${{ steps.update.outputs['child--remoteName'] }}
           URL_OUTPUT: ${{ steps.update.outputs['child--url'] }}
           PREV_OUTPUT: ${{ steps.update.outputs['child--previousCommitSha'] }}
           LATEST_OUTPUT: ${{ steps.update.outputs['child--latestCommitSha'] }}
+          PATH_PREV_OUTPUT: ${{ steps.update.outputs['vendor/child--previousCommitSha'] }}
+          PATH_LATEST_OUTPUT: ${{ steps.update.outputs['vendor/child--latestCommitSha'] }}
           JSON_OUTPUT: ${{ steps.update.outputs.json }}
         run: |
           set -euo pipefail
+          echo "BASELINE=$BASELINE"
+          echo "ADVANCED=$ADVANCED"
+          echo "PREV_OUTPUT=$PREV_OUTPUT"
+          echo "LATEST_OUTPUT=$LATEST_OUTPUT"
+          echo "PATH_PREV_OUTPUT=$PATH_PREV_OUTPUT"
+          echo "PATH_LATEST_OUTPUT=$PATH_LATEST_OUTPUT"
+          echo "URL_OUTPUT=$URL_OUTPUT"
+          echo "REMOTE_NAME=$REMOTE_NAME"
+          echo "--- submodule status ---"
+          git -C "$PARENT" submodule status
+          echo "--- json ---"
+          echo "$JSON_OUTPUT"
+          echo "--- asserting ---"
           test -n "$JSON_OUTPUT"
           test "$PREV_OUTPUT" = "$BASELINE"
           test "$LATEST_OUTPUT" = "$ADVANCED"
-          # url and remoteName must be distinct outputs (regression for original bug)
+          # path-prefix outputs must mirror name-prefix outputs
+          test "$PATH_PREV_OUTPUT" = "$BASELINE"
+          test "$PATH_LATEST_OUTPUT" = "$ADVANCED"
           test -n "$URL_OUTPUT"
+          # url and remoteName must be distinct outputs (regression for original bug)
           test "$URL_OUTPUT" != "$REMOTE_NAME"
   release:
     runs-on: ubuntu-latest
