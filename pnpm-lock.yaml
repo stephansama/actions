@@ -45,6 +45,9 @@ catalogs:
     '@stephansama/eslint-config':
       specifier: 0.2.3
       version: 0.2.3
+    '@stephansama/pnpm-hooks':
+      specifier: 0.1.1
+      version: 0.1.1
     '@stephansama/types-github-action-env':
       specifier: 1.0.3
       version: 1.0.3
@@ -138,7 +141,7 @@ importers:
   .:
     dependencies:
       '@stephansama/pnpm-hooks':
-        specifier: 0.1.1
+        specifier: 'catalog:'
         version: 0.1.1(@pnpm/logger@1001.0.1)
     devDependencies:
       '@actions/core':
