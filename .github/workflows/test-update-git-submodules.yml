@@ -107,7 +107,7 @@ jobs:
           test -n "$URL_OUTPUT"
           # url and remoteName must be distinct outputs (regression for original bug)
           test "$URL_OUTPUT" != "$REMOTE_NAME"
-      - name: 🧨 Wipe submodule working tree so init: true must reclone it
+      - name: "🧨 Wipe submodule working tree so init: true must reclone it"
         env:
           PARENT: ${{ steps.fixture.outputs.parent }}
         run: |
@@ -116,7 +116,7 @@ jobs:
           rm -rf "$PARENT/vendor/child" "$PARENT/.git/modules/child"
           # Sanity: the working tree is empty before the action runs.
           test ! -e "$PARENT/vendor/child/README.md"
-      - name: 🚀 Run update-git-submodules with init: true
+      - name: "🚀 Run update-git-submodules with init: true"
         id: update-init
         working-directory: ${{ steps.fixture.outputs.parent }}
         env:
@@ -126,7 +126,7 @@ jobs:
           INPUT_SUBMODULES: ""
           INPUT_TOKEN: ""
         run: node ${{ github.workspace }}/update-git-submodules/dist/index.mjs
-      - name: ✅ Verify init: true re-cloned the submodule and produced outputs
+      - name: "✅ Verify init: true re-cloned the submodule and produced outputs"
         env:
           PARENT: ${{ steps.fixture.outputs.parent }}
           ADVANCED: ${{ steps.fixture.outputs.advanced }}
