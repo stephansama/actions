@@ -174,6 +174,90 @@ describe("configureAuth / cleanupAuth", () => {
 	});
 });
 
+describe("assertSubmodulesInitialized", () => {
+	it("no-ops when the path list is empty", async () => {
+		const { assertSubmodulesInitialized } = await import("./index.js");
+		await assertSubmodulesInitialized([]);
+		expect(mocks.getExecOutput).not.toHaveBeenCalled();
+	});
+
+	it("returns without throwing when every target path is initialized", async () => {
+		mocks.getExecOutput.mockResolvedValue(
+			okExec(
+				[
+					" abc1234567890abcdef1234567890abcdef12345 vendor/a (heads/main)",
+					"+abc1234567890abcdef1234567890abcdef12345 vendor/b (heads/main)",
+				].join("\n"),
+			),
+		);
+		const { assertSubmodulesInitialized } = await import("./index.js");
+		await expect(
+			assertSubmodulesInitialized(["vendor/a", "vendor/b"]),
+		).resolves.toBeUndefined();
+		expect(mocks.getExecOutput).toHaveBeenCalledWith(
+			"git",
+			["submodule", "status", "--", "vendor/a", "vendor/b"],
+			{ ignoreReturnCode: true },
+		);
+	});
+
+	it("throws naming only the uninitialized paths when some are initialized and some aren't", async () => {
+		mocks.getExecOutput.mockResolvedValue(
+			okExec(
+				[
+					" abc1234567890abcdef1234567890abcdef12345 vendor/a (heads/main)",
+					"-bcd1234567890abcdef1234567890abcdef12345 vendor/b",
+					"-cde1234567890abcdef1234567890abcdef12345 vendor/c",
+				].join("\n"),
+			),
+		);
+		const { assertSubmodulesInitialized } = await import("./index.js");
+		await expect(
+			assertSubmodulesInitialized(["vendor/a", "vendor/b", "vendor/c"]),
+		).rejects.toThrow(/vendor\/b, vendor\/c/);
+	});
+
+	it("handles submodule paths that contain spaces (regression)", async () => {
+		mocks.getExecOutput.mockResolvedValue(
+			okExec(
+				[
+					" abc1234567890abcdef1234567890abcdef12345 vendor/path with spaces (heads/main)",
+					"-bcd1234567890abcdef1234567890abcdef12345 vendor/another spaced path",
+				].join("\n"),
+			),
+		);
+		const { assertSubmodulesInitialized } = await import("./index.js");
+		await expect(
+			assertSubmodulesInitialized([
+				"vendor/path with spaces",
+				"vendor/another spaced path",
+			]),
+		).rejects.toThrow(/vendor\/another spaced path/);
+	});
+
+	it("throws when git submodule status exits non-zero (does not silently pass)", async () => {
+		mocks.getExecOutput.mockResolvedValue({
+			exitCode: 128,
+			stderr: "fatal: not a git repository",
+			stdout: "",
+		});
+		const { assertSubmodulesInitialized } = await import("./index.js");
+		await expect(
+			assertSubmodulesInitialized(["vendor/a"]),
+		).rejects.toThrow(/Failed to inspect submodule status.*vendor\/a.*not a git repository/s);
+	});
+
+	it("error message tells the caller how to fix it (init: true or submodules: recursive)", async () => {
+		mocks.getExecOutput.mockResolvedValue(
+			okExec("-abc1234567890abcdef1234567890abcdef12345 vendor/a"),
+		);
+		const { assertSubmodulesInitialized } = await import("./index.js");
+		await expect(
+			assertSubmodulesInitialized(["vendor/a"]),
+		).rejects.toThrow(/init: true|submodules: recursive/);
+	});
+});
+
 describe("initSubmodules", () => {
 	it("issues sync --recursive followed by update --init --force --recursive", async () => {
 		const calls: string[][] = [];
@@ -1211,6 +1295,60 @@ describe("run", () => {
 			);
 		});
 		expect(cleanupCall).toBeDefined();
+	});
+
+	it("fails with the assertion error when a target submodule is uninitialized", async () => {
+		const inputs: Record<string, string> = {
+			gitmodulesPath: ".gitmodules",
+			strategy: "commit",
+			submodules: "",
+			token: "",
+		};
+		mocks.getInput.mockImplementation((name: string) => inputs[name] ?? "");
+
+		mocks.getExecOutput.mockImplementation(
+			(_cmd: string, arguments_: string[]) => {
+				if (
+					arguments_[0] === "config" &&
+					arguments_[1] === "-f" &&
+					arguments_[3] === "--list"
+				) {
+					return Promise.resolve(
+						okExec(
+							[
+								"submodule.icons.path=vendor/icons",
+								"submodule.icons.url=https://github.com/owner/icons.git",
+							].join("\n"),
+						),
+					);
+				}
+				if (arguments_[0] === "remote" && arguments_[1] === "get-url") {
+					return Promise.resolve(okExec("", 128));
+				}
+				if (
+					arguments_[0] === "submodule" &&
+					arguments_[1] === "status"
+				) {
+					return Promise.resolve(
+						okExec("-abc1234567890abcdef1234567890abcdef12345 vendor/icons"),
+					);
+				}
+				return Promise.resolve(okExec(""));
+			},
+		);
+
+		const { run } = await import("./index.js");
+		await run();
+
+		expect(mocks.setFailed).toHaveBeenCalledWith(
+			expect.stringContaining("Submodule path(s) not initialized: vendor/icons"),
+		);
+		// rev-parse must not run — we bailed before any enrichment that could
+		// silently walk up to the parent repo.
+		const revParseCalls = mocks.getExecOutput.mock.calls.filter(
+			(call) => (call[1] as string[])[0] === "rev-parse",
+		);
+		expect(revParseCalls).toHaveLength(0);
 	});
 
 	it("setFailed handles non-Error rejections by stringifying them", async () => {
