@@ -23,7 +23,7 @@ catalog:
   "@types/node": 24.1.0
   "@vitest/coverage-v8": 3.2.4
   "@vitest/ui": 3.2.4
-  actions-up: ^1.14.3
+  actions-up: 1.14.3
   eslint: 10.3.0
   lefthook: 2.1.6
   markdown-table: 3.0.4

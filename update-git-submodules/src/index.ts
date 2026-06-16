@@ -22,7 +22,7 @@ const SSH_URL_PATTERN = /^([^@\s]+)@([^:\s]+):(.+)$/;
 
 const GIT_CONFIG_LINE_PATTERN = /^submodule\.(.+)\.(path|url)=(.*)$/;
 
-const SUBMODULE_STATUS_LINE_PATTERN = /^(.)[0-9a-f]+\s+(\S+)/;
+const SUBMODULE_STATUS_LINE_PATTERN = /^(.)[0-9a-f]+\s+(.+?)(?:\s+\([^)]+\))?$/;
 
 const TRAILING_SLASH_PATTERN = /\/$/;
 
@@ -91,11 +91,18 @@ export async function assertSubmodulesInitialized(
 	paths: string[],
 ): Promise<void> {
 	if (paths.length === 0) return;
-	const { stdout } = await exec.getExecOutput(
+	const { exitCode, stderr, stdout } = await exec.getExecOutput(
 		"git",
 		["submodule", "status", "--", ...paths],
 		{ ignoreReturnCode: true },
 	);
+	if (exitCode !== 0) {
+		throw new Error(
+			`Failed to inspect submodule status for: ${paths.join(", ")}. ` +
+				(stderr.trim() ||
+					"git submodule status returned non-zero exit code."),
+		);
+	}
 	const uninitialized: string[] = [];
 	for (const line of stdout.split(NEWLINE_PATTERN)) {
 		const match = line.match(SUBMODULE_STATUS_LINE_PATTERN);

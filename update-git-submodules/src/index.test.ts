@@ -217,6 +217,36 @@ describe("assertSubmodulesInitialized", () => {
 		).rejects.toThrow(/vendor\/b, vendor\/c/);
 	});
 
+	it("handles submodule paths that contain spaces (regression)", async () => {
+		mocks.getExecOutput.mockResolvedValue(
+			okExec(
+				[
+					" abc1234567890abcdef1234567890abcdef12345 vendor/path with spaces (heads/main)",
+					"-bcd1234567890abcdef1234567890abcdef12345 vendor/another spaced path",
+				].join("\n"),
+			),
+		);
+		const { assertSubmodulesInitialized } = await import("./index.js");
+		await expect(
+			assertSubmodulesInitialized([
+				"vendor/path with spaces",
+				"vendor/another spaced path",
+			]),
+		).rejects.toThrow(/vendor\/another spaced path/);
+	});
+
+	it("throws when git submodule status exits non-zero (does not silently pass)", async () => {
+		mocks.getExecOutput.mockResolvedValue({
+			exitCode: 128,
+			stderr: "fatal: not a git repository",
+			stdout: "",
+		});
+		const { assertSubmodulesInitialized } = await import("./index.js");
+		await expect(
+			assertSubmodulesInitialized(["vendor/a"]),
+		).rejects.toThrow(/Failed to inspect submodule status.*vendor\/a.*not a git repository/s);
+	});
+
 	it("error message tells the caller how to fix it (init: true or submodules: recursive)", async () => {
 		mocks.getExecOutput.mockResolvedValue(
 			okExec("-abc1234567890abcdef1234567890abcdef12345 vendor/a"),
