@@ -5,6 +5,7 @@ import * as url from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+	getBooleanInput: vi.fn(),
 	getExecOutput: vi.fn(),
 	getInput: vi.fn(),
 	setFailed: vi.fn(),
@@ -13,6 +14,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@actions/core", () => ({
+	getBooleanInput: mocks.getBooleanInput,
 	getInput: mocks.getInput,
 	setFailed: mocks.setFailed,
 	setOutput: mocks.setOutput,
@@ -43,11 +45,13 @@ describe("loadInputs", () => {
 		const { loadInputs } = await import("./index.js");
 		expect(loadInputs()).toEqual({
 			gitmodulesPath: ".gitmodules",
+			init: false,
 			strategy: "commit",
 			submodules: [],
 			token: "",
 		});
 		expect(mocks.setSecret).not.toHaveBeenCalled();
+		expect(mocks.getBooleanInput).not.toHaveBeenCalled();
 	});
 
 	it("parses multi-line submodules and registers token as secret", async () => {
@@ -61,11 +65,29 @@ describe("loadInputs", () => {
 		const { loadInputs } = await import("./index.js");
 		expect(loadInputs()).toEqual({
 			gitmodulesPath: "custom.gitmodules",
+			init: false,
 			strategy: "tag",
 			submodules: ["first", "second", "third"],
 			token: "ghp_abc",
 		});
 		expect(mocks.setSecret).toHaveBeenCalledWith("ghp_abc");
+	});
+
+	it("parses init: true via getBooleanInput when the raw input is non-empty", async () => {
+		const inputs: Record<string, string> = { init: "true" };
+		mocks.getInput.mockImplementation((name: string) => inputs[name] ?? "");
+		mocks.getBooleanInput.mockReturnValue(true);
+		const { loadInputs } = await import("./index.js");
+		expect(loadInputs().init).toBe(true);
+		expect(mocks.getBooleanInput).toHaveBeenCalledWith("init");
+	});
+
+	it("treats an explicit init: false the same as unset", async () => {
+		const inputs: Record<string, string> = { init: "false" };
+		mocks.getInput.mockImplementation((name: string) => inputs[name] ?? "");
+		mocks.getBooleanInput.mockReturnValue(false);
+		const { loadInputs } = await import("./index.js");
+		expect(loadInputs().init).toBe(false);
 	});
 
 	it("rejects an invalid strategy", async () => {
@@ -149,6 +171,24 @@ describe("configureAuth / cleanupAuth", () => {
 			],
 			{ ignoreReturnCode: true },
 		);
+	});
+});
+
+describe("initSubmodules", () => {
+	it("issues sync --recursive followed by update --init --force --recursive", async () => {
+		const calls: string[][] = [];
+		mocks.getExecOutput.mockImplementation(
+			(_cmd: string, arguments_: string[]) => {
+				calls.push(arguments_);
+				return Promise.resolve(okExec(""));
+			},
+		);
+		const { initSubmodules } = await import("./index.js");
+		await initSubmodules();
+		expect(calls).toEqual([
+			["submodule", "sync", "--recursive"],
+			["submodule", "update", "--init", "--force", "--recursive"],
+		]);
 	});
 });
 
@@ -1030,6 +1070,114 @@ describe("run", () => {
 		expect(outputs["icons--latestTag"]).toBe(latestTag);
 		expect(outputs["icons--previousTag"]).toBe(previousTag);
 		expect(outputs["icons--latestCommitSha"]).toBe(latestSha);
+	});
+
+	it("invokes initSubmodules when init: true (after configureAuth, before parseGitmodulesFile)", async () => {
+		const inputs: Record<string, string> = {
+			gitmodulesPath: ".gitmodules",
+			init: "true",
+			strategy: "commit",
+			submodules: "",
+			token: "ghs_tok",
+		};
+		mocks.getInput.mockImplementation((name: string) => inputs[name] ?? "");
+		mocks.getBooleanInput.mockImplementation(
+			(name: string) => inputs[name] === "true",
+		);
+
+		const callOrder: string[] = [];
+		const previousSha = "abc1234567890000000000000000000000000000";
+		const latestSha = "def4567890000000000000000000000000000000";
+		let revParseCount = 0;
+		mocks.getExecOutput.mockImplementation(
+			(_cmd: string, arguments_: string[]) => {
+				callOrder.push(arguments_.join(" "));
+				if (
+					arguments_[0] === "config" &&
+					arguments_[1] === "-f" &&
+					arguments_[3] === "--list"
+				) {
+					return Promise.resolve(
+						okExec(
+							[
+								"submodule.icons.path=vendor/icons",
+								"submodule.icons.url=https://github.com/owner/icons.git",
+							].join("\n"),
+						),
+					);
+				}
+				if (arguments_[0] === "remote" && arguments_[1] === "get-url") {
+					return Promise.resolve(okExec("", 128));
+				}
+				if (arguments_[0] === "rev-parse") {
+					revParseCount++;
+					return Promise.resolve(
+						okExec(
+							revParseCount === 1
+								? `${previousSha}\n`
+								: `${latestSha}\n`,
+						),
+					);
+				}
+				if (arguments_[0] === "describe") {
+					return Promise.resolve(okExec("", 128));
+				}
+				return Promise.resolve(okExec(""));
+			},
+		);
+
+		const { run } = await import("./index.js");
+		await run();
+
+		expect(mocks.setFailed).not.toHaveBeenCalled();
+		const indexOfAuth = callOrder.findIndex((c) =>
+			c.includes("http.https://github.com/.extraheader"),
+		);
+		const indexOfSync = callOrder.indexOf("submodule sync --recursive");
+		const indexOfInit = callOrder.indexOf(
+			"submodule update --init --force --recursive",
+		);
+		const indexOfList = callOrder.findIndex((c) => c.endsWith("--list"));
+		expect(indexOfAuth).toBeGreaterThanOrEqual(0);
+		expect(indexOfSync).toBeGreaterThan(indexOfAuth);
+		expect(indexOfInit).toBe(indexOfSync + 1);
+		expect(indexOfList).toBeGreaterThan(indexOfInit);
+	});
+
+	it("skips initSubmodules when init is unset / false", async () => {
+		const inputs: Record<string, string> = {
+			gitmodulesPath: ".gitmodules",
+			strategy: "commit",
+			submodules: "",
+			token: "",
+		};
+		mocks.getInput.mockImplementation((name: string) => inputs[name] ?? "");
+
+		const callOrder: string[] = [];
+		mocks.getExecOutput.mockImplementation(
+			(_cmd: string, arguments_: string[]) => {
+				callOrder.push(arguments_.join(" "));
+				if (
+					arguments_[0] === "config" &&
+					arguments_[1] === "-f" &&
+					arguments_[3] === "--list"
+				) {
+					return Promise.resolve(okExec(""));
+				}
+				if (arguments_[0] === "remote" && arguments_[1] === "get-url") {
+					return Promise.resolve(okExec("", 128));
+				}
+				return Promise.resolve(okExec(""));
+			},
+		);
+
+		const { run } = await import("./index.js");
+		await run();
+
+		expect(callOrder).not.toContain("submodule sync --recursive");
+		expect(callOrder).not.toContain(
+			"submodule update --init --force --recursive",
+		);
 	});
 
 	it("calls setFailed and still cleans up auth on error", async () => {

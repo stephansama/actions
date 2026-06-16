@@ -6,6 +6,15 @@ inputs:
     required: false
     default: ".gitmodules"
     description: Path to the .gitmodules file
+  init:
+    required: false
+    default: "false"
+    description: |
+      When "true", run `git submodule sync --recursive` and
+      `git submodule update --init --force --recursive` using the configured
+      token before reading submodule state. Use this so the caller can omit
+      `submodules: recursive` on `actions/checkout` and let one PAT cover
+      both cloning and updating cross-repo private submodules.
   strategy:
     required: false
     default: "commit"

@@ -35,6 +35,7 @@ export type EnrichedSubmodule = ParsedSubmodule & {
 
 export type Inputs = {
 	gitmodulesPath: string;
+	init: boolean;
 	strategy: Strategy;
 	submodules: string[];
 	token: string;
@@ -243,8 +244,20 @@ export async function hasTag(cwd: string, sha: string): Promise<boolean> {
 	return stdout.trim().length > 0;
 }
 
+export async function initSubmodules(): Promise<void> {
+	await exec.getExecOutput("git", ["submodule", "sync", "--recursive"]);
+	await exec.getExecOutput("git", [
+		"submodule",
+		"update",
+		"--init",
+		"--force",
+		"--recursive",
+	]);
+}
+
 export function loadInputs(): Inputs {
 	const gitmodulesPath = core.getInput("gitmodulesPath") || ".gitmodules";
+	const init = core.getInput("init") ? core.getBooleanInput("init") : false;
 	const strategy = StrategySchema.parse(
 		core.getInput("strategy") || "commit",
 	);
@@ -255,7 +268,7 @@ export function loadInputs(): Inputs {
 		.filter(Boolean);
 	const token = core.getInput("token") || "";
 	if (token) core.setSecret(token);
-	return { gitmodulesPath, strategy, submodules, token };
+	return { gitmodulesPath, init, strategy, submodules, token };
 }
 
 export async function parseGitmodulesFile(
@@ -296,6 +309,7 @@ export async function run(): Promise<void> {
 		const inputs = loadInputs();
 		token = inputs.token;
 		await configureAuth(token);
+		if (inputs.init) await initSubmodules();
 
 		const parentRemoteUrl = await getParentRemoteUrl();
 		const parsed = await parseGitmodulesFile(

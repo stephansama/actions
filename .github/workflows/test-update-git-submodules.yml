@@ -107,3 +107,37 @@ jobs:
           test -n "$URL_OUTPUT"
           # url and remoteName must be distinct outputs (regression for original bug)
           test "$URL_OUTPUT" != "$REMOTE_NAME"
+      - name: 🧨 Wipe submodule working tree so init: true must reclone it
+        env:
+          PARENT: ${{ steps.fixture.outputs.parent }}
+        run: |
+          set -euo pipefail
+          git -C "$PARENT" submodule deinit -f vendor/child
+          rm -rf "$PARENT/vendor/child" "$PARENT/.git/modules/child"
+          # Sanity: the working tree is empty before the action runs.
+          test ! -e "$PARENT/vendor/child/README.md"
+      - name: 🚀 Run update-git-submodules with init: true
+        id: update-init
+        working-directory: ${{ steps.fixture.outputs.parent }}
+        env:
+          INPUT_GITMODULESPATH: .gitmodules
+          INPUT_INIT: "true"
+          INPUT_STRATEGY: commit
+          INPUT_SUBMODULES: ""
+          INPUT_TOKEN: ""
+        run: node ${{ github.workspace }}/update-git-submodules/dist/index.mjs
+      - name: ✅ Verify init: true re-cloned the submodule and produced outputs
+        env:
+          PARENT: ${{ steps.fixture.outputs.parent }}
+          ADVANCED: ${{ steps.fixture.outputs.advanced }}
+          LATEST_OUTPUT: ${{ steps.update-init.outputs['child--latestCommitSha'] }}
+          JSON_OUTPUT: ${{ steps.update-init.outputs.json }}
+        run: |
+          set -euo pipefail
+          echo "--- submodule status after init ---"
+          git -C "$PARENT" submodule status
+          echo "--- asserting working tree is back ---"
+          test -f "$PARENT/vendor/child/README.md"
+          echo "--- asserting outputs ---"
+          test -n "$JSON_OUTPUT"
+          test "$LATEST_OUTPUT" = "$ADVANCED"
