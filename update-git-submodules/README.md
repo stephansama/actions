@@ -48,7 +48,7 @@ jobs:
 
 ## 🔐 Required permissions
 
-The calling workflow must grant the right token scope and check out the submodules **before** invoking this action.
+The calling workflow must grant the right token scope. Submodules must be present on disk before this step runs — either via `actions/checkout` with `submodules: recursive`, or by setting `init: true` here so this action clones them itself.
 
 | Concern                               | What to do                                                                                                                                                                                                                                                                                                      |
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -56,7 +56,7 @@ The calling workflow must grant the right token scope and check out the submodul
 | Submodules in **other public repos**  | The default token also works — no extra setup.                                                                                                                                                                                                                                                                  |
 | Submodules in **other private repos** | `GITHUB_TOKEN` is scoped to the current repo only. Either (a) pass a **PAT** (scope `repo`) / **App installation token** to both `actions/checkout` and this action's `token:` input, or (b) skip `submodules: recursive` on checkout and use `init: true` here so this action clones them with the PAT itself. |
 | Committing/pushing the update         | Set `permissions: contents: write` on the **caller's** workflow. This action itself does not commit.                                                                                                                                                                                                            |
-| Submodules present on disk            | Use `actions/checkout@v4` with `submodules: recursive` (or `true`) before this step — otherwise there is nothing to update.                                                                                                                                                                                     |
+| Submodules present on disk            | Either use `actions/checkout@v4` with `submodules: recursive` (or `true`) before this step, **or** set `init: true` here and provide a `token` that can clone the submodules.                                                                                                                                   |
 
 Example wiring a PAT for cross-repo private submodules:
 
