@@ -22,6 +22,8 @@ const SSH_URL_PATTERN = /^([^@\s]+)@([^:\s]+):(.+)$/;
 
 const GIT_CONFIG_LINE_PATTERN = /^submodule\.(.+)\.(path|url)=(.*)$/;
 
+const SUBMODULE_STATUS_LINE_PATTERN = /^(.)[0-9a-f]+\s+(\S+)/;
+
 const TRAILING_SLASH_PATTERN = /\/$/;
 
 const NEWLINE_PATTERN = /\r?\n/;
@@ -85,6 +87,31 @@ export function buildPrBody(
 	return markdownTable([header, ...rows]);
 }
 
+export async function assertSubmodulesInitialized(
+	paths: string[],
+): Promise<void> {
+	if (paths.length === 0) return;
+	const { stdout } = await exec.getExecOutput(
+		"git",
+		["submodule", "status", "--", ...paths],
+		{ ignoreReturnCode: true },
+	);
+	const uninitialized: string[] = [];
+	for (const line of stdout.split(NEWLINE_PATTERN)) {
+		const match = line.match(SUBMODULE_STATUS_LINE_PATTERN);
+		if (!match) continue;
+		const [, marker, path] = match;
+		if (marker === "-") uninitialized.push(path);
+	}
+	if (uninitialized.length === 0) return;
+	throw new Error(
+		`Submodule path(s) not initialized: ${uninitialized.join(", ")}. ` +
+			"Either set `init: true` on update-git-submodules (with a `token` " +
+			"that can clone the submodule repos), or set `submodules: recursive` " +
+			"on actions/checkout before this step.",
+	);
+}
+
 export async function cleanupAuth(token: string): Promise<void> {
 	if (!token) return;
 	await exec.getExecOutput(
@@ -145,10 +172,10 @@ export async function enrichSubmodule(
 	};
 }
 
-export function filterSubmodules(
-	submodules: EnrichedSubmodule[],
+export function filterSubmodules<T extends { name: string; path: string }>(
+	submodules: T[],
 	filter: string[],
-): EnrichedSubmodule[] {
+): T[] {
 	if (filter.length === 0) return submodules;
 	return submodules.filter(
 		(s) => filter.includes(s.name) || filter.includes(s.path),
@@ -316,11 +343,12 @@ export async function run(): Promise<void> {
 			inputs.gitmodulesPath,
 			parentRemoteUrl,
 		);
-		const enriched: EnrichedSubmodule[] = [];
-		for (const s of parsed) {
-			enriched.push(await enrichSubmodule(s));
+		const targets = filterSubmodules(parsed, inputs.submodules);
+		await assertSubmodulesInitialized(targets.map((s) => s.path));
+		const filtered: EnrichedSubmodule[] = [];
+		for (const s of targets) {
+			filtered.push(await enrichSubmodule(s));
 		}
-		const filtered = filterSubmodules(enriched, inputs.submodules);
 
 		const records =
 			inputs.strategy === "tag"

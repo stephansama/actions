@@ -35,7 +35,8 @@
 		]
 	},
 	"dependencies": {
-		"@stephansama/pnpm-hooks": "catalog:"
+		"@stephansama/pnpm-hooks": "catalog:",
+		"actions-up": "catalog:"
 	},
 	"devDependencies": {
 		"@actions/core": "catalog:",

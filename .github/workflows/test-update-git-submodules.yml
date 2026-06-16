@@ -116,6 +116,25 @@ jobs:
           rm -rf "$PARENT/vendor/child" "$PARENT/.git/modules/child"
           # Sanity: the working tree is empty before the action runs.
           test ! -e "$PARENT/vendor/child/README.md"
+      - name: 🛑 Action must fail fast when a submodule is uninitialized and init is off
+        working-directory: ${{ steps.fixture.outputs.parent }}
+        env:
+          INPUT_GITMODULESPATH: .gitmodules
+          INPUT_STRATEGY: commit
+          INPUT_SUBMODULES: ""
+          INPUT_TOKEN: ""
+        run: |
+          set -euo pipefail
+          set +e
+          output="$(node ${{ github.workspace }}/update-git-submodules/dist/index.mjs 2>&1)"
+          status=$?
+          set -e
+          echo "--- action output ---"
+          echo "$output"
+          echo "--- asserting ---"
+          test "$status" -ne 0
+          echo "$output" | grep -F "Submodule path(s) not initialized: vendor/child"
+          echo "$output" | grep -F "init: true"
       - name: "🚀 Run update-git-submodules with init: true"
         id: update-init
         working-directory: ${{ steps.fixture.outputs.parent }}
