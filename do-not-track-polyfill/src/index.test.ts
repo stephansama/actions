@@ -35,6 +35,15 @@ describe("do-not-track-polyfill", () => {
 			}
 		});
 
+		it("disables varlock telemetry", async () => {
+			await import("./index");
+
+			expect(mocks.exportVariable).toHaveBeenCalledWith(
+				"VARLOCK_TELEMETRY_DISABLED",
+				1,
+			);
+		});
+
 		it("enables additional environment variables when supplied", async () => {
 			const sh = String.raw;
 			const mockGetInput = sh`
