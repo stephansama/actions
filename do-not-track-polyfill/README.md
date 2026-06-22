@@ -48,6 +48,7 @@ variables to disable telemetry for popular platforms such as:
 
 - AstroJS
 - Storybook
+- Varlock
 - Vercel
 
 You can also customize which flags are set (see below).
